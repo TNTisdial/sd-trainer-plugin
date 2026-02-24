@@ -10,7 +10,7 @@ This folder contains the current technical documentation for the skid runtime pl
 
 - `io-system.md`: startup install/staging, runtime swap behavior, and cleanup lifecycle.
 - `acceleration-logic.md`: acceleration sampling, expected max acceleration formulas, and tier transitions.
-- `settings-reference.md`: visible plugin settings and default values.
+- `settings-reference.md`: plugin settings, advanced visibility notes, and default values.
 - `skid-picker-ui.md`: skid skin picker UI behavior and hidden persisted tier-file fields.
 
 ## Code map

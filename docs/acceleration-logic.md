@@ -1,14 +1,14 @@
 # Acceleration and Tier Logic
 
-## Drift quality metric
+## Drift quality ratio
 
 Each frame, the plugin computes:
 
-`barFactor = slopeAdjustedAcceleration / adjustedMaxAccelSpeedSlide`
+`driftQualityRatio = slopeAdjustedAcceleration / adjustedMaxAccelSpeedSlide`
 
 Then clamps to `[-1.0, 1.0]`.
 
-This ratio drives tier selection: `default`, `poor`, `mid`, `high`.
+This ratio (`driftQualityRatio`) drives tier selection: `default`, `poor`, `mid`, `high`.
 
 ## Measured acceleration path (`SimulationStep`)
 

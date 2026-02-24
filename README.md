@@ -11,7 +11,7 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 
 ## What it does
 
-- Computes drift quality (`barFactor`) each frame from measured acceleration vs surface-specific expected max acceleration.
+- Computes drift quality (`driftQualityRatio`) each frame from measured acceleration vs surface-specific expected max acceleration.
 - Maps quality to tiers: `default`, `poor`, `mid`, `high`.
 - Swaps skid textures across asphalt, dirt, and grass.
 - Includes a skin-picker UI for selecting tier textures per surface.

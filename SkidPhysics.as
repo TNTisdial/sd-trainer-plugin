@@ -103,7 +103,7 @@ float ApplyLowSpeedForgiveness(float accelMax, float speedKmh, SkidSurface surfa
 }
 
 // --- Tier Selection ---
-DriftTier DetermineTargetTier(float barFactor) {
+DriftTier DetermineTargetTier(float driftQualityRatio) {
     if (isBoosted) {
         return currentTier;
     }
@@ -113,33 +113,33 @@ DriftTier DetermineTargetTier(float barFactor) {
     }
 
     if (currentTier == DriftTier::High) {
-        if (barFactor < greenSkidThreshold - skidHysteresisDown) {
-            if (barFactor >= yellowSkidThreshold - skidHysteresisDown) return DriftTier::Mid;
-            if (barFactor >= redSkidThreshold) return DriftTier::Poor;
+        if (driftQualityRatio < greenSkidThreshold - skidHysteresisDown) {
+            if (driftQualityRatio >= yellowSkidThreshold - skidHysteresisDown) return DriftTier::Mid;
+            if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
             return DriftTier::Default;
         }
         return DriftTier::High;
     }
 
     if (currentTier == DriftTier::Mid) {
-        if (barFactor >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
-        if (barFactor < yellowSkidThreshold - skidHysteresisDown) {
-            if (barFactor >= redSkidThreshold) return DriftTier::Poor;
+        if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
+        if (driftQualityRatio < yellowSkidThreshold - skidHysteresisDown) {
+            if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
             return DriftTier::Default;
         }
         return DriftTier::Mid;
     }
 
     if (currentTier == DriftTier::Poor) {
-        if (barFactor >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
-        if (barFactor >= yellowSkidThreshold + skidHysteresisUp) return DriftTier::Mid;
-        if (barFactor < redSkidThreshold - skidHysteresisDown) return DriftTier::Default;
+        if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
+        if (driftQualityRatio >= yellowSkidThreshold + skidHysteresisUp) return DriftTier::Mid;
+        if (driftQualityRatio < redSkidThreshold - skidHysteresisDown) return DriftTier::Default;
         return DriftTier::Poor;
     }
 
-    if (barFactor >= greenSkidThreshold) return DriftTier::High;
-    if (barFactor >= yellowSkidThreshold) return DriftTier::Mid;
-    if (barFactor >= redSkidThreshold) return DriftTier::Poor;
+    if (driftQualityRatio >= greenSkidThreshold) return DriftTier::High;
+    if (driftQualityRatio >= yellowSkidThreshold) return DriftTier::Mid;
+    if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
     return DriftTier::Default;
 }
 

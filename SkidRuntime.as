@@ -40,55 +40,58 @@ bool useSlopeAdjustedAcc = true;
 [Setting name="Debug Logging" description="Print verbose debug info to the Openplanet console."]
 bool debugLogging = false;
 
+[Setting name="Show Advanced Settings" description="Show advanced tuning controls in the Runtime settings tab."]
+bool showAdvancedSettings = false;
+
 [Setting name="Enable Colored Skids" description="Toggle dynamic skid color swapping on/off."]
 bool coloredSkidsEnabled = true;
 
-[Setting name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min="50" max="2000" drag="true"]
+[Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min="50" max="2000" drag="true"]
 uint64 swapDebounceMs = 250;
 
-[Setting name="Green Skid Threshold" description="Minimum barFactor for green (perfect) skid color." min="0.50" max="1.00" drag="true"]
+[Setting name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min="0.50" max="1.00" drag="true"]
 float greenSkidThreshold = 0.94f;
 
-[Setting name="Yellow Skid Threshold" description="Minimum barFactor for yellow (good) skid color." min="0.30" max="0.99" drag="true"]
+[Setting name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min="0.30" max="0.99" drag="true"]
 float yellowSkidThreshold = 0.75f;
 
-[Setting name="Red Skid Threshold" description="Minimum barFactor for red (poor) skid color. Below this stays default." min="0.0" max="0.70" drag="true"]
+[Setting name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min="0.0" max="0.70" drag="true"]
 float redSkidThreshold = 0.20f;
 
-[Setting name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min="0.0" max="0.15" drag="true"]
+[Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min="0.0" max="0.15" drag="true"]
 float skidHysteresisUp = 0.02f;
 
-[Setting name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min="0.0" max="0.15" drag="true"]
+[Setting hidden name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min="0.0" max="0.15" drag="true"]
 float skidHysteresisDown = 0.01f;
 
 [Setting name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
 bool lowSpeedForgivenessEnabled = true;
 
-[Setting name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min="500" max="900" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min="500" max="900" drag="true"]
 float forgivenessMaxSpeed_Asphalt = 700.0f;
 
-[Setting name="Asphalt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on asphalt." min="400" max="600" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on asphalt." min="400" max="600" drag="true"]
 float forgivenessMinSpeed_Asphalt = 400.0f;
 
-[Setting name="Asphalt Forgiveness Factor" description="Multiplier at minimum speed on asphalt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Factor" description="Multiplier at minimum speed on asphalt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
 float forgivenessFactor_Asphalt = 0.80f;
 
-[Setting name="Dirt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on dirt." min="100" max="500" drag="true"]
+[Setting hidden name="Dirt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on dirt." min="100" max="500" drag="true"]
 float forgivenessMaxSpeed_Dirt = 300.0f;
 
-[Setting name="Dirt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on dirt." min="50" max="300" drag="true"]
+[Setting hidden name="Dirt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on dirt." min="50" max="300" drag="true"]
 float forgivenessMinSpeed_Dirt = 150.0f;
 
-[Setting name="Dirt Forgiveness Factor" description="Multiplier at minimum speed on dirt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Dirt Forgiveness Factor" description="Multiplier at minimum speed on dirt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
 float forgivenessFactor_Dirt = 0.80f;
 
-[Setting name="Grass Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on grass." min="100" max="500" drag="true"]
+[Setting hidden name="Grass Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on grass." min="100" max="500" drag="true"]
 float forgivenessMaxSpeed_Grass = 300.0f;
 
-[Setting name="Grass Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on grass." min="50" max="300" drag="true"]
+[Setting hidden name="Grass Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on grass." min="50" max="300" drag="true"]
 float forgivenessMinSpeed_Grass = 150.0f;
 
-[Setting name="Grass Forgiveness Factor" description="Multiplier at minimum speed on grass. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Grass Forgiveness Factor" description="Multiplier at minimum speed on grass. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
 float forgivenessFactor_Grass = 0.80f;
 
 // --- State ---
@@ -193,6 +196,55 @@ string TierName(DriftTier tier) {
     return "default";
 }
 
+[SettingsTab name="Runtime" icon="Sliders"]
+void R_S_RuntimeSettingsTab() {
+    UI::TextWrapped("Core toggles stay visible in regular settings. Advanced tuning lives here.");
+    UI::Separator();
+
+    UI::Text("Tier thresholds (driftQualityRatio)");
+    UI::TextWrapped("Reference: 1.00 is a perfect SD.");
+    UI::SliderFloat("Green Skid Threshold", greenSkidThreshold, 0.50f, 1.00f);
+    UI::SliderFloat("Yellow Skid Threshold", yellowSkidThreshold, 0.30f, 0.99f);
+    UI::SliderFloat("Red Skid Threshold", redSkidThreshold, 0.00f, 0.70f);
+
+    UI::Separator();
+
+    showAdvancedSettings = UI::Checkbox("Show advanced tuning", showAdvancedSettings);
+    if (!showAdvancedSettings) {
+        UI::TextWrapped("Enable advanced tuning to reveal hysteresis, debounce, and forgiveness controls.");
+        return;
+    }
+
+    int swapDebounceInt = Math::Clamp(int(swapDebounceMs), 50, 2000);
+    if (UI::SliderInt("Swap Debounce (ms)", swapDebounceInt, 50, 2000)) {
+        swapDebounceMs = uint64(swapDebounceInt);
+    }
+
+    UI::Separator();
+    UI::Text("Hysteresis");
+    UI::SliderFloat("Upgrade Hysteresis", skidHysteresisUp, 0.00f, 0.15f);
+    UI::SliderFloat("Downgrade Hysteresis", skidHysteresisDown, 0.00f, 0.15f);
+
+    UI::Separator();
+    UI::Text("Low-speed forgiveness");
+    UI::TextWrapped("Interpolation applies from Min Speed up to Max Speed for each surface.");
+
+    UI::Text("Asphalt");
+    UI::SliderFloat("Asphalt Forgiveness Min Speed", forgivenessMinSpeed_Asphalt, 400.0f, 600.0f);
+    UI::SliderFloat("Asphalt Forgiveness Max Speed", forgivenessMaxSpeed_Asphalt, 500.0f, 900.0f);
+    UI::SliderFloat("Asphalt Forgiveness Factor", forgivenessFactor_Asphalt, 0.60f, 1.00f);
+
+    UI::Text("Dirt");
+    UI::SliderFloat("Dirt Forgiveness Min Speed", forgivenessMinSpeed_Dirt, 50.0f, 300.0f);
+    UI::SliderFloat("Dirt Forgiveness Max Speed", forgivenessMaxSpeed_Dirt, 100.0f, 500.0f);
+    UI::SliderFloat("Dirt Forgiveness Factor", forgivenessFactor_Dirt, 0.60f, 1.00f);
+
+    UI::Text("Grass");
+    UI::SliderFloat("Grass Forgiveness Min Speed", forgivenessMinSpeed_Grass, 50.0f, 300.0f);
+    UI::SliderFloat("Grass Forgiveness Max Speed", forgivenessMaxSpeed_Grass, 100.0f, 500.0f);
+    UI::SliderFloat("Grass Forgiveness Factor", forgivenessFactor_Grass, 0.60f, 1.00f);
+}
+
 // --- Main Entrypoints ---
 void OnSettingsChanged() {
     if (!debugLogging) return;
@@ -286,18 +338,18 @@ void Render() {
     }
 
     float denom = Math::Max(MIN_ACCEL_DENOM, adjustedMaxAccelSpeedSlide);
-    float barFactor = slopeAdjustedAcceleration / denom;
-    if (barFactor > 1.0f) {
-        barFactor = 1.0f;
-    } else if (barFactor < -1.0f) {
-        barFactor = -1.0f;
+    float driftQualityRatio = slopeAdjustedAcceleration / denom;
+    if (driftQualityRatio > 1.0f) {
+        driftQualityRatio = 1.0f;
+    } else if (driftQualityRatio < -1.0f) {
+        driftQualityRatio = -1.0f;
     }
 
     if (!coloredSkidsEnabled) {
         return;
     }
 
-    DriftTier targetTier = DetermineTargetTier(barFactor);
+    DriftTier targetTier = DetermineTargetTier(driftQualityRatio);
     bool tierChanged = targetTier != currentTier;
     if (!tierChanged || Time::Now - lastSkidSwapTime <= swapDebounceMs) {
         return;
