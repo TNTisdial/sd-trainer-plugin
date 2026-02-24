@@ -4,6 +4,10 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 
 ![Recent changes preview](docs/images/changes.png)
 
+## Download
+
+- Get the latest build from the Releases page: <https://github.com/TNTisdial/sd-trainer-plugin/releases/latest>
+
 ## Status and compatibility
 
 - This plugin is still a work in progress and needs more tuning/cleanup before Openplanet submission for School use.
