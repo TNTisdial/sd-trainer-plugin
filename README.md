@@ -1,4 +1,4 @@
-# SD Trainer
+# SD-Trainer-Plugin
 
 Openplanet plugin for Trackmania that swaps skidmark textures in real time based on drift quality.
 
@@ -37,3 +37,16 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - `docs/acceleration-logic.md` for drift-quality computation.
 - `docs/settings-reference.md` for runtime settings and defaults.
 - `docs/skid-picker-ui.md` for UI behavior and hidden persisted fields.
+
+## Licensing notes
+
+- `DDS_IMG/` is MIT-licensed code with its original license text at `DDS_IMG/LICENSE`.
+
+## Authors
+
+Thanks to the people and projects that made this possible:
+
+- `XertroV/tm-modless-skids` (The Unlicense) for core modless skid swap reference patterns.
+- `voblivion/Openplanet-IMG` (MIT) for DDS preview helper inspiration/code used in `DDS_IMG/`.
+- Magpie (`SilasDo/Trackmania-Speed-Drift-Trainer-Plugin`, MIT) for speed-drift acceleration logic direction.
+- Shorty for proving the concept and helping inspire this plugin's approach.
