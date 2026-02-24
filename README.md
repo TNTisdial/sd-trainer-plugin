@@ -7,7 +7,7 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - This plugin is still a work in progress and needs more tuning/cleanup before Openplanet submission for School use.
 - You must set Openplanet Signature Mode to `Developer` for this plugin to run.
 - This plugin conflicts with `XertroV/tm-modless-skids` because both touch skid files in `ModWork`.
-- If you leave School mode and want your previous skids back, open Modless-Skids settings in Openplanet, from the Trackmania main menu, click Open Modwork Folder, then delete `ModWork` entirely (not just the contents). Your previous skids/preferences should restore after loading a map.
+- If you leave Developer mode and want your previous skids back, open Modless-Skids settings in Openplanet, from the Trackmania main menu, click Open Modwork Folder, then delete `ModWork` entirely (not just the contents). Your previous skids/preferences should restore after loading a map.
 
 ## Install
 
