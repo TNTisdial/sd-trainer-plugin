@@ -1,34 +1,20 @@
 # SD-Trainer-Plugin
 
-Openplanet plugin for Trackmania that swaps skidmark textures in real time based on drift quality.
+Openplanet plugin for Trackmania that swaps skidmark textures in real time based on speed drift quality.
+
+## Status and compatibility
+
+- This plugin is still a work in progress and needs more tuning/cleanup before Openplanet submission for School use.
+- You must set Openplanet Signature Mode to `Developer` for this plugin to run.
+- This plugin conflicts with `XertroV/tm-modless-skids` because both touch skid files in `ModWork`.
+- If you leave School mode and want your previous skids back, open Modless-Skids settings from the Trackmania main menu, open the parent folder, then delete `ModWork` entirely. Your previous skids/preferences should restore after loading a map.
 
 ## What it does
 
 - Computes drift quality (`barFactor`) each frame from measured acceleration vs surface-specific expected max acceleration.
 - Maps quality to tiers: `default`, `poor`, `mid`, `high`.
-- Swaps skid textures across asphalt, dirt, and grass with hysteresis and debounce to reduce flicker.
+- Swaps skid textures across asphalt, dirt, and grass.
 - Includes a skin-picker UI for selecting tier textures per surface.
-
-## Quick setup
-
-1. Install `SD-Trainer-Plugin` from Openplanet Plugin Manager (`VehicleState` is handled automatically as a dependency).
-2. Launch Trackmania with Openplanet.
-3. Open the plugin settings tab `Skid Skins` and choose textures for each tier.
-4. Drive and drift; texture changes happen automatically while drifting. During turbo/boost, the current skid tier is held and resumes updating when boost ends.
-
-## Runtime paths
-
-- Source texture folders: `Documents/Trackmania/Skins/Stadium/Skids/Asphalt/`, `Documents/Trackmania/Skins/Stadium/Skids/Dirt/`, `Documents/Trackmania/Skins/Stadium/Skids/Grass/`
-- Live ModWork targets: `Skins/Stadium/ModWork/CarFxImage/CarAsphaltMarks.dds`, `Skins/Stadium/ModWork/CarFxImage/CarGrassMarks.dds`, `Skins/Stadium/ModWork/DirtMarks.dds`
-
-## Project layout
-
-- `SkidRuntime.as`: plugin settings/state, startup wiring, and render-time orchestration.
-- `SkidIO.as`: bundled install, staging/priming, live swap file IO, cleanup, and texture refresh.
-- `SkidPhysics.as`: drift sampling, acceleration model, forgiveness, and tier selection.
-- `SkidSettings.as`: settings UI for per-surface High/Mid/Poor texture selection and preview.
-- `DDS_IMG/`: DDS preview helper code.
-- `docs/`: detailed docs index and subsystem references.
 
 ## Documentation
 
