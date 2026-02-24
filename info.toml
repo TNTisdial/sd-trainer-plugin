@@ -1,0 +1,10 @@
+[meta]
+name     = "SD Trainer"
+author   = "TNT"
+category = "Utilities"
+version  = "1.0.0"
+blocks   = [ "Plugin_SDTrainer" ]
+
+[script]
+dependencies = [ "VehicleState" ]
+timeout      = 0
