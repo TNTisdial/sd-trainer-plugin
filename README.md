@@ -25,6 +25,8 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 
 ## Authors
 
+This project was primarily written using OpenCode with GPT-5.3-Codex, Claude Opus 4.6, and Gemini 3.1, with final decisions and validation by the maintainer.
+
 Thanks to the people and projects that made this possible:
 
 - XertroV (`XertroV/tm-modless-skids`) for core modless skid swap reference patterns.
