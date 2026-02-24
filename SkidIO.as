@@ -261,9 +261,44 @@ bool HasBundledSkidsAtRoot(const string &in root) {
         && IO::FolderExists(root + "/Grass");
 }
 
+const string REMOTE_SKIDS_TAG = "v1.0.2";
+const string REMOTE_SKIDS_BASE_URL = "https://raw.githubusercontent.com/TNTisdial/sd-trainer-plugin/" + REMOTE_SKIDS_TAG + "/SkidOptions";
+array<string> kRemoteBundledSkidFiles = {
+    "Default.dds",
+    "BlueFadeThicc.dds",
+    "GreenFadeThicc.dds",
+    "YellowFadeThicc.dds",
+    "RedFadeThicc.dds"
+};
+
+bool TrySetBundledSkidsRoot(const string &in candidateRoot, const string &in sourceLabel) {
+    string normalized = candidateRoot.Replace("\\", "/");
+    if (!HasBundledSkidsAtRoot(normalized)) return false;
+    bundledSkidsRoot = normalized;
+    dbg("[Install] Resolved bundled skids root via " + sourceLabel + ": " + bundledSkidsRoot);
+    return true;
+}
+
 string ResolveBundledSkidsRoot() {
     if (bundledSkidsRoot.Length > 0 && HasBundledSkidsAtRoot(bundledSkidsRoot)) {
         return bundledSkidsRoot;
+    }
+
+    auto plugin = Meta::ExecutingPlugin();
+    if (plugin !is null) {
+        string sourcePath = plugin.SourcePath.Replace("\\", "/");
+        if (sourcePath.Length > 0) {
+            if (TrySetBundledSkidsRoot(sourcePath + "/SkidOptions", "plugin source path")) {
+                return bundledSkidsRoot;
+            }
+
+            if (sourcePath.ToLower().EndsWith(".op")) {
+                string withoutExt = sourcePath.SubStr(0, sourcePath.Length - 3);
+                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugin source sibling folder")) {
+                    return bundledSkidsRoot;
+                }
+            }
+        }
     }
 
     string pluginsDir = IO::FromDataFolder("Plugins").Replace("\\", "/");
@@ -272,27 +307,43 @@ string ResolveBundledSkidsRoot() {
         entries.SortAsc();
 
         for (uint i = 0; i < entries.Length; i++) {
-            string pluginDir = entries[i].Replace("\\", "/");
-            if (!IO::FolderExists(pluginDir)) continue;
-            if (!IO::FileExists(pluginDir + "/SkidRuntime.as")) continue;
+            string entryPath = entries[i].Replace("\\", "/");
 
-            string candidate = pluginDir + "/SkidOptions";
-            if (HasBundledSkidsAtRoot(candidate)) {
-                bundledSkidsRoot = candidate;
-                dbg("[Install] Resolved bundled skids root: " + bundledSkidsRoot);
-                return bundledSkidsRoot;
+            if (IO::FolderExists(entryPath) && IO::FileExists(entryPath + "/SkidRuntime.as")) {
+                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder preferred scan")) {
+                    return bundledSkidsRoot;
+                }
+            }
+
+            if (entryPath.ToLower().EndsWith(".op")) {
+                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op mount")) {
+                    return bundledSkidsRoot;
+                }
+
+                string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
+                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op sibling folder")) {
+                    return bundledSkidsRoot;
+                }
             }
         }
 
         for (uint i = 0; i < entries.Length; i++) {
-            string pluginDir = entries[i].Replace("\\", "/");
-            if (!IO::FolderExists(pluginDir)) continue;
+            string entryPath = entries[i].Replace("\\", "/");
+            if (IO::FolderExists(entryPath)) {
+                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder fallback scan")) {
+                    return bundledSkidsRoot;
+                }
+            }
 
-            string candidate = pluginDir + "/SkidOptions";
-            if (HasBundledSkidsAtRoot(candidate)) {
-                bundledSkidsRoot = candidate;
-                dbg("[Install] Resolved bundled skids root via fallback scan: " + bundledSkidsRoot);
-                return bundledSkidsRoot;
+            if (entryPath.ToLower().EndsWith(".op")) {
+                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op fallback mount")) {
+                    return bundledSkidsRoot;
+                }
+
+                string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
+                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op fallback sibling folder")) {
+                    return bundledSkidsRoot;
+                }
             }
         }
     }
@@ -300,15 +351,78 @@ string ResolveBundledSkidsRoot() {
     return "";
 }
 
+bool DownloadBundledSkidFile(const string &in surfaceName, const string &in filename) {
+    string destDir = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName).Replace("\\", "/");
+    EnsureDir(destDir);
+
+    string destPath = destDir + "/" + filename;
+    if (IO::FileExists(destPath)) {
+        return true;
+    }
+
+    string url = REMOTE_SKIDS_BASE_URL + "/" + surfaceName + "/" + filename;
+    trace("[Install] Downloading fallback skid: " + surfaceName + "/" + filename);
+    auto req = Net::HttpGet(url);
+    while (!req.Finished()) {
+        yield();
+    }
+
+    if (req.ResponseCode() != 200) {
+        warn("[Install] Failed to download " + surfaceName + "/" + filename + " from " + url + " (HTTP " + req.ResponseCode() + ")");
+        if (req.Error().Length > 0) {
+            warn("[Install] Download error: " + req.Error());
+        }
+        return false;
+    }
+
+    auto buf = req.Buffer();
+    if (buf is null) {
+        warn("[Install] Downloaded empty response for " + surfaceName + "/" + filename);
+        return false;
+    }
+
+    IO::File outFile(destPath, IO::FileMode::Write);
+    outFile.Write(buf);
+    outFile.Close();
+    trace("[Install] Downloaded fallback skid: " + surfaceName + "/" + filename);
+    return true;
+}
+
+bool DownloadBundledSkidsFromRemote() {
+    int downloaded = 0;
+    int skipped = 0;
+    int failed = 0;
+
+    for (uint i = 0; i < kSurfaces.Length; i++) {
+        string surfaceName = SurfaceFolderName(kSurfaces[i]);
+        for (uint f = 0; f < kRemoteBundledSkidFiles.Length; f++) {
+            string filename = kRemoteBundledSkidFiles[f];
+            string destPath = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName + "/" + filename).Replace("\\", "/");
+            if (IO::FileExists(destPath)) {
+                skipped++;
+                continue;
+            }
+
+            if (DownloadBundledSkidFile(surfaceName, filename)) {
+                downloaded++;
+            } else {
+                failed++;
+            }
+        }
+    }
+
+    trace("[Install] Remote skid fallback complete. downloaded=" + downloaded + ", skipped=" + skipped + ", failed=" + failed);
+    return failed == 0;
+}
+
 void InstallBundledSkidsForSurface(SkidSurface surfaceKind) {
-    string skidsRoot = ResolveBundledSkidsRoot();
-    if (skidsRoot.Length == 0) {
-        warn("[Install] Could not resolve plugin SkidOptions folder. Skipping bundled install.");
+    if (bundledSkidsRoot.Length == 0) {
+        warn("[Install] Bundled SkidOptions root is empty. Skipping packaged install.");
         return;
     }
 
     string surfaceName = SurfaceFolderName(surfaceKind);
-    string pluginSkidsDir = skidsRoot + "/" + surfaceName;
+    string pluginSkidsDir = bundledSkidsRoot + "/" + surfaceName;
     dbg("[Install] Looking for bundled skids at: " + pluginSkidsDir);
     if (!IO::FolderExists(pluginSkidsDir)) {
         warn("[Install] Bundled SkidOptions/" + surfaceName + " folder not found - skipping install.");
@@ -353,6 +467,15 @@ void InstallBundledSkidsForSurface(SkidSurface surfaceKind) {
 }
 
 void InstallBundledSkids() {
+    bundledSkidsRoot = ResolveBundledSkidsRoot();
+    if (bundledSkidsRoot.Length == 0) {
+        warn("[Install] Could not resolve plugin SkidOptions folder. Trying GitHub fallback.");
+        if (!DownloadBundledSkidsFromRemote()) {
+            warn("[Install] GitHub fallback did not fully complete; missing files may remain.");
+        }
+        return;
+    }
+
     for (uint i = 0; i < kSurfaces.Length; i++) {
         InstallBundledSkidsForSurface(kSurfaces[i]);
     }

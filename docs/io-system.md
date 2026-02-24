@@ -16,14 +16,15 @@ Note: dirt live target is outside `CarFxImage` by engine behavior.
 ## Startup flow
 
 1. Resolve bundled `SkidOptions` root.
-2. Preferred source is a plugin folder containing `SkidRuntime.as` and `SkidOptions`.
-3. Fallback is any plugin folder containing `SkidOptions/Asphalt`, `SkidOptions/Dirt`, `SkidOptions/Grass`.
-4. Install bundled `.dds` into user skid folders per surface.
-5. Existing `Default.dds` is replaced by bundled `Default.dds`; other existing files are kept.
-6. Scan user skid folders (`.dds` only) and sort names.
-7. Stage required files for each surface: `Default.dds` plus selected High/Mid/Poor files.
-8. Prime live targets with `Default.dds`.
-9. Call `Media_RefreshFromDisk(EMediaType::Skins, 4)` if staging succeeded.
+2. Preferred source is the executing plugin source path (works for folder installs and `.op` loads where `SkidOptions` is addressable).
+3. Fallback scans `OpenplanetNext/Plugins` for either folders or `.op` entries that expose `SkidOptions/Asphalt`, `SkidOptions/Dirt`, `SkidOptions/Grass`.
+4. If `SkidOptions` cannot be resolved locally, fallback downloads core skids from GitHub tag-pinned raw URLs.
+5. Install bundled `.dds` into user skid folders per surface.
+6. Existing `Default.dds` is replaced by bundled `Default.dds`; other existing files are kept.
+7. Scan user skid folders (`.dds` only) and sort names.
+8. Stage required files for each surface: `Default.dds` plus selected High/Mid/Poor files.
+9. Prime live targets with `Default.dds`.
+10. Call `Media_RefreshFromDisk(EMediaType::Skins, 4)` if staging succeeded.
 
 If required files cannot be staged/primed, runtime colored swaps remain disabled (`stagedFilesReady = false`).
 
