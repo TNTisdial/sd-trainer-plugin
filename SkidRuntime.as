@@ -44,34 +44,34 @@ bool debugLogging = false;
 bool showAdvancedSettings = false;
 
 [Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min="50" max="2000" drag="true"]
-uint64 swapDebounceMs = 250;
+uint64 swapDebounceMs = 225;
 
 [Setting hidden name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min="0.50" max="1.00" drag="true"]
-float greenSkidThreshold = 0.94f;
+float greenSkidThreshold = 0.93f;
 
 [Setting hidden name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min="0.30" max="0.99" drag="true"]
-float yellowSkidThreshold = 0.75f;
+float yellowSkidThreshold = 0.70f;
 
 [Setting hidden name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min="0.0" max="0.70" drag="true"]
-float redSkidThreshold = 0.20f;
+float redSkidThreshold = 0.10f;
 
 [Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min="0.0" max="0.15" drag="true"]
-float skidHysteresisUp = 0.02f;
+float skidHysteresisUp = 0.015f;
 
 [Setting hidden name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min="0.0" max="0.15" drag="true"]
-float skidHysteresisDown = 0.01f;
+float skidHysteresisDown = 0.015f;
 
 [Setting hidden name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
 bool lowSpeedForgivenessEnabled = true;
 
 [Setting hidden name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min="500" max="900" drag="true"]
-float forgivenessMaxSpeed_Asphalt = 700.0f;
+float forgivenessMaxSpeed_Asphalt = 550.0f;
 
 [Setting hidden name="Asphalt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on asphalt." min="400" max="600" drag="true"]
 float forgivenessMinSpeed_Asphalt = 400.0f;
 
 [Setting hidden name="Asphalt Forgiveness Factor" description="Multiplier at minimum speed on asphalt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
-float forgivenessFactor_Asphalt = 0.80f;
+float forgivenessFactor_Asphalt = 0.90f;
 
 [Setting hidden name="Dirt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on dirt." min="100" max="500" drag="true"]
 float forgivenessMaxSpeed_Dirt = 300.0f;
@@ -80,7 +80,7 @@ float forgivenessMaxSpeed_Dirt = 300.0f;
 float forgivenessMinSpeed_Dirt = 150.0f;
 
 [Setting hidden name="Dirt Forgiveness Factor" description="Multiplier at minimum speed on dirt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
-float forgivenessFactor_Dirt = 0.80f;
+float forgivenessFactor_Dirt = 0.90f;
 
 [Setting hidden name="Grass Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on grass." min="100" max="500" drag="true"]
 float forgivenessMaxSpeed_Grass = 300.0f;
@@ -89,7 +89,7 @@ float forgivenessMaxSpeed_Grass = 300.0f;
 float forgivenessMinSpeed_Grass = 150.0f;
 
 [Setting hidden name="Grass Forgiveness Factor" description="Multiplier at minimum speed on grass. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
-float forgivenessFactor_Grass = 0.80f;
+float forgivenessFactor_Grass = 0.90f;
 
 // --- State ---
 float prevSpeed;
@@ -133,22 +133,22 @@ string bundledSkidsRoot;
 // Snapshot of settings values - used to detect changes in OnSettingsChanged.
 bool _prev_pluginEnabled = true;
 bool _prev_useSlopeAdjustedAcc = true;
-uint64 _prev_swapDebounceMs = 250;
-float _prev_greenSkidThreshold = 0.94f;
-float _prev_yellowSkidThreshold = 0.75f;
-float _prev_redSkidThreshold = 0.20f;
-float _prev_skidHysteresisUp = 0.02f;
-float _prev_skidHysteresisDown = 0.01f;
+uint64 _prev_swapDebounceMs = 225;
+float _prev_greenSkidThreshold = 0.93f;
+float _prev_yellowSkidThreshold = 0.70f;
+float _prev_redSkidThreshold = 0.10f;
+float _prev_skidHysteresisUp = 0.015f;
+float _prev_skidHysteresisDown = 0.015f;
 bool _prev_lowSpeedForgivenessEnabled = true;
-float _prev_forgivenessMaxSpeed_Asphalt = 700.0f;
+float _prev_forgivenessMaxSpeed_Asphalt = 550.0f;
 float _prev_forgivenessMinSpeed_Asphalt = 400.0f;
-float _prev_forgivenessFactor_Asphalt = 0.80f;
+float _prev_forgivenessFactor_Asphalt = 0.90f;
 float _prev_forgivenessMaxSpeed_Dirt = 300.0f;
 float _prev_forgivenessMinSpeed_Dirt = 150.0f;
-float _prev_forgivenessFactor_Dirt = 0.80f;
+float _prev_forgivenessFactor_Dirt = 0.90f;
 float _prev_forgivenessMaxSpeed_Grass = 300.0f;
 float _prev_forgivenessMinSpeed_Grass = 150.0f;
-float _prev_forgivenessFactor_Grass = 0.80f;
+float _prev_forgivenessFactor_Grass = 0.90f;
 
 // --- Helpers ---
 void dbg(const string &in msg) {

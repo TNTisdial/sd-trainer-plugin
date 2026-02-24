@@ -16,7 +16,7 @@ Advanced (hidden by default):
 
 Advanced (hidden by default):
 
-- `Swap Debounce (ms)`: `250`
+- `Swap Debounce (ms)`: `225`
 
 ## Tier thresholds
 
@@ -24,16 +24,16 @@ Thresholds apply to `driftQualityRatio` (clamped to `[-1.0, 1.0]`). `1.0` repres
 
 Advanced (hidden by default):
 
-- `Green Skid Threshold`: `0.94`
-- `Yellow Skid Threshold`: `0.75`
-- `Red Skid Threshold`: `0.20`
+- `Green Skid Threshold`: `0.93`
+- `Yellow Skid Threshold`: `0.70`
+- `Red Skid Threshold`: `0.10`
 
 ## Hysteresis
 
 Advanced (hidden by default):
 
-- `Upgrade Hysteresis`: `0.02`
-- `Downgrade Hysteresis`: `0.01`
+- `Upgrade Hysteresis`: `0.015`
+- `Downgrade Hysteresis`: `0.015`
 
 ## Low-speed forgiveness
 
@@ -43,18 +43,18 @@ Advanced (hidden by default):
 
 Asphalt defaults:
 
-- `Asphalt Forgiveness Max Speed`: `700.0`
+- `Asphalt Forgiveness Max Speed`: `550.0`
 - `Asphalt Forgiveness Min Speed`: `400.0`
-- `Asphalt Forgiveness Factor`: `0.80`
+- `Asphalt Forgiveness Factor`: `0.90`
 
 Dirt defaults:
 
 - `Dirt Forgiveness Max Speed`: `300.0`
 - `Dirt Forgiveness Min Speed`: `150.0`
-- `Dirt Forgiveness Factor`: `0.80`
+- `Dirt Forgiveness Factor`: `0.90`
 
 Grass defaults:
 
 - `Grass Forgiveness Max Speed`: `300.0`
 - `Grass Forgiveness Min Speed`: `150.0`
-- `Grass Forgiveness Factor`: `0.80`
+- `Grass Forgiveness Factor`: `0.90`
