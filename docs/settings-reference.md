@@ -5,13 +5,14 @@ All values below are current defaults from `SkidRuntime.as`.
 ## General
 
 - `Enable Plugin`: `true`
-- `Gravity Acceleration Adjustment`: `true`
 - `Debug Logging`: `false`
-- `Show Advanced Settings`: `false` (reveals advanced controls in the `Runtime` settings tab)
+
+Advanced (hidden by default):
+
+- `Show Advanced Settings`: `false` (reveals runtime tuning controls)
+- `Gravity Acceleration Adjustment`: `true`
 
 ## Dynamic colored skids
-
-- `Enable Colored Skids`: `true`
 
 Advanced (hidden by default):
 
@@ -20,6 +21,8 @@ Advanced (hidden by default):
 ## Tier thresholds
 
 Thresholds apply to `driftQualityRatio` (clamped to `[-1.0, 1.0]`). `1.0` represents a perfect SD.
+
+Advanced (hidden by default):
 
 - `Green Skid Threshold`: `0.94`
 - `Yellow Skid Threshold`: `0.75`
@@ -34,9 +37,9 @@ Advanced (hidden by default):
 
 ## Low-speed forgiveness
 
-- `Low Speed Forgiveness`: `true`
-
 Advanced (hidden by default):
+
+- `Low Speed Forgiveness`: `true`
 
 Asphalt defaults:
 

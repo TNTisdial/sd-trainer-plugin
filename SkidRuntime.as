@@ -34,28 +34,25 @@ array<SkidSurface> kSurfaces = {SkidSurface::Asphalt, SkidSurface::Dirt, SkidSur
 [Setting name="Enable Plugin" description="Enables/ Disables the plugin."]
 bool pluginEnabled = true;
 
-[Setting name="Gravity Acceleration Adjustment" description="Calculate acceleration independently of gravity"]
+[Setting hidden name="Gravity Acceleration Adjustment" description="Calculate acceleration independently of gravity"]
 bool useSlopeAdjustedAcc = true;
 
 [Setting name="Debug Logging" description="Print verbose debug info to the Openplanet console."]
 bool debugLogging = false;
 
-[Setting name="Show Advanced Settings" description="Show advanced tuning controls in the Runtime settings tab."]
+[Setting hidden name="Show Advanced Settings" description="Show advanced tuning controls in the Runtime settings tab."]
 bool showAdvancedSettings = false;
-
-[Setting name="Enable Colored Skids" description="Toggle dynamic skid color swapping on/off."]
-bool coloredSkidsEnabled = true;
 
 [Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min="50" max="2000" drag="true"]
 uint64 swapDebounceMs = 250;
 
-[Setting name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min="0.50" max="1.00" drag="true"]
+[Setting hidden name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min="0.50" max="1.00" drag="true"]
 float greenSkidThreshold = 0.94f;
 
-[Setting name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min="0.30" max="0.99" drag="true"]
+[Setting hidden name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min="0.30" max="0.99" drag="true"]
 float yellowSkidThreshold = 0.75f;
 
-[Setting name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min="0.0" max="0.70" drag="true"]
+[Setting hidden name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min="0.0" max="0.70" drag="true"]
 float redSkidThreshold = 0.20f;
 
 [Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min="0.0" max="0.15" drag="true"]
@@ -64,7 +61,7 @@ float skidHysteresisUp = 0.02f;
 [Setting hidden name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min="0.0" max="0.15" drag="true"]
 float skidHysteresisDown = 0.01f;
 
-[Setting name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
+[Setting hidden name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
 bool lowSpeedForgivenessEnabled = true;
 
 [Setting hidden name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min="500" max="900" drag="true"]
@@ -136,7 +133,6 @@ string bundledSkidsRoot;
 // Snapshot of settings values - used to detect changes in OnSettingsChanged.
 bool _prev_pluginEnabled = true;
 bool _prev_useSlopeAdjustedAcc = true;
-bool _prev_coloredSkidsEnabled = true;
 uint64 _prev_swapDebounceMs = 250;
 float _prev_greenSkidThreshold = 0.94f;
 float _prev_yellowSkidThreshold = 0.75f;
@@ -198,7 +194,6 @@ string TierName(DriftTier tier) {
 
 [SettingsTab name="Runtime" icon="Sliders"]
 void R_S_RuntimeSettingsTab() {
-    UI::TextWrapped("Core toggles stay visible in regular settings. Advanced tuning lives here.");
     UI::Separator();
 
     UI::Text("Tier thresholds (driftQualityRatio)");
@@ -215,9 +210,12 @@ void R_S_RuntimeSettingsTab() {
         return;
     }
 
+    useSlopeAdjustedAcc = UI::Checkbox("Gravity Acceleration Adjustment", useSlopeAdjustedAcc);
+
     int swapDebounceInt = Math::Clamp(int(swapDebounceMs), 50, 2000);
-    if (UI::SliderInt("Swap Debounce (ms)", swapDebounceInt, 50, 2000)) {
-        swapDebounceMs = uint64(swapDebounceInt);
+    int newSwapDebounceInt = UI::SliderInt("Swap Debounce (ms)", swapDebounceInt, 50, 2000);
+    if (newSwapDebounceInt != swapDebounceInt) {
+        swapDebounceMs = uint64(newSwapDebounceInt);
     }
 
     UI::Separator();
@@ -226,6 +224,7 @@ void R_S_RuntimeSettingsTab() {
     UI::SliderFloat("Downgrade Hysteresis", skidHysteresisDown, 0.00f, 0.15f);
 
     UI::Separator();
+    lowSpeedForgivenessEnabled = UI::Checkbox("Low Speed Forgiveness", lowSpeedForgivenessEnabled);
     UI::Text("Low-speed forgiveness");
     UI::TextWrapped("Interpolation applies from Min Speed up to Max Speed for each surface.");
 
@@ -250,7 +249,6 @@ void OnSettingsChanged() {
     if (!debugLogging) return;
     if (TrackSettingChangeBool("Enable Plugin", pluginEnabled, _prev_pluginEnabled)) _prev_pluginEnabled = pluginEnabled;
     if (TrackSettingChangeBool("Gravity Adjustment", useSlopeAdjustedAcc, _prev_useSlopeAdjustedAcc)) _prev_useSlopeAdjustedAcc = useSlopeAdjustedAcc;
-    if (TrackSettingChangeBool("Enable Colored Skids", coloredSkidsEnabled, _prev_coloredSkidsEnabled)) _prev_coloredSkidsEnabled = coloredSkidsEnabled;
     if (TrackSettingChangeUint64("Swap Debounce (ms)", swapDebounceMs, _prev_swapDebounceMs)) _prev_swapDebounceMs = swapDebounceMs;
     if (TrackSettingChangeFloat("Green Threshold", greenSkidThreshold, _prev_greenSkidThreshold)) _prev_greenSkidThreshold = greenSkidThreshold;
     if (TrackSettingChangeFloat("Yellow Threshold", yellowSkidThreshold, _prev_yellowSkidThreshold)) _prev_yellowSkidThreshold = yellowSkidThreshold;
@@ -343,10 +341,6 @@ void Render() {
         driftQualityRatio = 1.0f;
     } else if (driftQualityRatio < -1.0f) {
         driftQualityRatio = -1.0f;
-    }
-
-    if (!coloredSkidsEnabled) {
-        return;
     }
 
     DriftTier targetTier = DetermineTargetTier(driftQualityRatio);

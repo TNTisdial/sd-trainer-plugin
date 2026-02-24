@@ -9,6 +9,11 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - This plugin conflicts with `XertroV/tm-modless-skids` because both touch skid files in `ModWork`.
 - If you leave School mode and want your previous skids back, open Modless-Skids settings in Openplanet, from the Trackmania main menu, click Open Modwork Folder, then delete `ModWork` entirely (not just the contents). Your previous skids/preferences should restore after loading a map.
 
+## Install
+
+- Copy `SD-Trainer-Plugin.op` to `C:\Users\<username>\OpenplanetNext\Plugins`.
+- Launch Trackmania with Openplanet and enable the plugin.
+
 ## What it does
 
 - Computes drift quality (`driftQualityRatio`) each frame from measured acceleration vs surface-specific expected max acceleration.
