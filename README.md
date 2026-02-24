@@ -12,7 +12,9 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 ## Install
 
 - Copy `SD-Trainer-Plugin.op` to `C:\Users\<username>\OpenplanetNext\Plugins`.
-- Launch Trackmania with Openplanet and enable the plugin.
+- Launch Trackmania with Openplanet, change Signature Mode to `Developer`
+- In Openplanet click the developer tab, hover over `Load Plugin` 
+- Click SD-Trainer-Plugin
 
 ## What it does
 
