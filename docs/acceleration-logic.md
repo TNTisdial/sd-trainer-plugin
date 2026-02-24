@@ -45,8 +45,9 @@ Outside that range, it returns the unmodified expected max acceleration.
 
 ## Tier selection and swap gating
 
-1. If not drifting or turbo active, target is always `default`.
-2. Otherwise, tier selection uses thresholds and hysteresis (`threshold + skidHysteresisUp` for upgrades and `threshold - skidHysteresisDown` for downgrades).
-3. Swap is attempted only when target tier differs, debounce elapsed (`swapDebounceMs`), and staged files are ready.
+1. If turbo is active, the target tier is held at the current tier (no forced reset).
+2. If not drifting and not turbo, target is `default`.
+3. Otherwise, tier selection uses thresholds and hysteresis (`threshold + skidHysteresisUp` for upgrades and `threshold - skidHysteresisDown` for downgrades).
+4. Swap is attempted only when target tier differs, debounce elapsed (`swapDebounceMs`), and staged files are ready.
 
 If any surface swap fails, current tier is kept for retry.

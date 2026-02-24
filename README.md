@@ -14,7 +14,7 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 1. Install plugin dependency `VehicleState`.
 2. Launch Trackmania with Openplanet.
 3. Open the plugin settings tab `Skid Skins` and choose textures for each tier.
-4. Drive and drift; texture changes happen automatically while drifting (disabled while turbo/boosted).
+4. Drive and drift; texture changes happen automatically while drifting. During turbo/boost, the current skid tier is held and resumes updating when boost ends.
 
 ## Runtime paths
 

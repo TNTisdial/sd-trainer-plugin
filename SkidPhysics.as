@@ -104,7 +104,11 @@ float ApplyLowSpeedForgiveness(float accelMax, float speedKmh, SkidSurface surfa
 
 // --- Tier Selection ---
 DriftTier DetermineTargetTier(float barFactor) {
-    if (!isDrifting || isBoosted) {
+    if (isBoosted) {
+        return currentTier;
+    }
+
+    if (!isDrifting) {
         return DriftTier::Default;
     }
 
