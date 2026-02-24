@@ -28,7 +28,7 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 
 Thanks to the people and projects that made this possible:
 
-- `XertroV/tm-modless-skids` for core modless skid swap reference patterns.
-- `voblivion/Openplanet-IMG` for DDS preview helper inspiration/code used in `DDS_IMG/`.
+- XertroV (`XertroV/tm-modless-skids`) for core modless skid swap reference patterns.
+- voblivion (`voblivion/Openplanet-IMG`) for DDS preview helper code used in `DDS_IMG/`.
 - Magpie (`SilasDo/Trackmania-Speed-Drift-Trainer-Plugin`) for speed-drift acceleration logic direction.
-- Shorty for proving the concept and helping inspire this plugin's approach.
+- Shorty for proving the concept.
