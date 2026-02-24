@@ -2,6 +2,8 @@
 
 Openplanet plugin for Trackmania that swaps skidmark textures in real time based on speed drift quality.
 
+![Recent changes preview](docs/images/changes.png)
+
 ## Status and compatibility
 
 - This plugin is still a work in progress and needs more tuning/cleanup before Openplanet submission for School use.
