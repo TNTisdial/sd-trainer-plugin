@@ -29,6 +29,15 @@ Folders are scanned from user game paths:
 
 Only `.dds` files are listed. Names are sorted and shown without `.dds` in combo labels.
 
+On startup, if a persisted selected filename is missing, the plugin auto-corrects per tier to:
+
+1. currently selected file (if present)
+2. preferred default tier file for that surface
+3. `Default.dds`
+4. first available file
+
+This avoids startup staging failures when a previously selected skin was removed.
+
 ## UI controls
 
 Per surface:

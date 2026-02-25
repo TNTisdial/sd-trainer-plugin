@@ -22,9 +22,11 @@ Note: dirt live target is outside `CarFxImage` by engine behavior.
 5. Install bundled `.dds` into user skid folders per surface.
 6. Existing `Default.dds` is replaced by bundled `Default.dds`; other existing files are kept.
 7. Scan user skid folders (`.dds` only) and sort names.
-8. Stage required files for each surface: `Default.dds` plus selected High/Mid/Poor files.
-9. Prime live targets with `Default.dds`.
-10. Call `Media_RefreshFromDisk(EMediaType::Skins, 4)` if staging succeeded.
+8. Auto-correct persisted High/Mid/Poor selections if files are missing (fallback to preferred/default/available).
+9. Refresh runtime texture lists.
+10. Stage required files for each surface: `Default.dds` plus selected High/Mid/Poor files.
+11. Prime live targets with `Default.dds`.
+12. Call `Media_RefreshFromDisk(EMediaType::Skins, 4)` if staging succeeded.
 
 If required files cannot be staged/primed, runtime colored swaps remain disabled (`stagedFilesReady = false`).
 

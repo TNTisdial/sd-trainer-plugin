@@ -12,11 +12,15 @@ Advanced (hidden by default):
 - `Show Advanced Settings`: `false` (reveals runtime tuning controls)
 - `Gravity Acceleration Adjustment`: `true`
 
+Runtime UI action:
+
+- `Reset Runtime Tuning Defaults`: sets all Runtime tab tuning values back to code defaults.
+
 ## Dynamic colored skids
 
 Advanced (hidden by default):
 
-- `Swap Debounce (ms)`: `225`
+- `Swap Debounce (ms)`: `260`
 
 ## Tier thresholds
 
@@ -24,7 +28,7 @@ Thresholds apply to `driftQualityRatio` (clamped to `[-1.0, 1.0]`). `1.0` repres
 
 Advanced (hidden by default):
 
-- `Green Skid Threshold`: `0.93`
+- `Green Skid Threshold`: `0.910`
 - `Yellow Skid Threshold`: `0.70`
 - `Red Skid Threshold`: `0.10`
 
@@ -34,6 +38,22 @@ Advanced (hidden by default):
 
 - `Upgrade Hysteresis`: `0.015`
 - `Downgrade Hysteresis`: `0.015`
+
+## Stability filters
+
+Advanced (hidden by default):
+
+- `Promotion Persistence Frames`: `4`
+- `Downgrade Persistence Frames`: `4`
+- `Landing Lockout (ms)`: `80`
+- `Min SlipCoef To Drift`: `0.150`
+- `Slip Hysteresis`: `0.020`
+- `Post-Landing Impact Guard (ms)`: `60`
+- `Impact Spike Threshold`: `3.000`
+- `Impact Extra Promotion Frames`: `2`
+- `Post-Boost Impact Guard (ms)`: `100`
+- `Boost Spike Threshold`: `2.500`
+- `Boost Extra Promotion Frames`: `2`
 
 ## Low-speed forgiveness
 
