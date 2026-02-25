@@ -68,7 +68,7 @@ int promotionPersistenceFrames = 4;
 int downgradePersistenceFrames = 4;
 
 [Setting hidden name="Landing Lockout (ms)" description="Block tier upgrades briefly after landing. 0 disables lockout."]
-int landingLockoutMs = 80;
+int landingLockoutMs = 30;
 
 [Setting hidden name="Min SlipCoef To Drift" description="Minimum FLSlipCoef required to count as drifting. 0 keeps current behavior." min="0.00" max="0.30" drag="true"]
 float minSlipCoefToDrift = 0.150f;
@@ -77,7 +77,7 @@ float minSlipCoefToDrift = 0.150f;
 float slipHysteresis = 0.020f;
 
 [Setting hidden name="Post-Landing Impact Guard (ms)" description="Window after landing where spike detection can add extra upgrade persistence frames. 0 disables."]
-int postLandingImpactGuardMs = 60;
+int postLandingImpactGuardMs = 30;
 
 [Setting hidden name="Impact Spike Threshold" description="Minimum accel delta between frames to treat post-landing signal as an impact spike. 0 disables impact guard."]
 float impactSpikeThreshold = 3.000f;
@@ -236,7 +236,9 @@ void DrawHelpIcon(const string &in infoText) {
     UI::Text(Icons::QuestionCircle);
     if (UI::IsItemHovered()) {
         UI::BeginTooltip();
+        UI::PushTextWrapPos(UI::GetCursorPos().x + 420.0f);
         UI::TextWrapped(infoText);
+        UI::PopTextWrapPos();
         UI::EndTooltip();
     }
 }
@@ -294,10 +296,10 @@ void ResetRuntimeTuningDefaults() {
 
     promotionPersistenceFrames = 4;
     downgradePersistenceFrames = 4;
-    landingLockoutMs = 80;
+    landingLockoutMs = 30;
     minSlipCoefToDrift = 0.150f;
     slipHysteresis = 0.020f;
-    postLandingImpactGuardMs = 60;
+    postLandingImpactGuardMs = 30;
     impactSpikeThreshold = 3.000f;
     impactExtraPromotionFrames = 2;
     postBoostImpactGuardMs = 100;
