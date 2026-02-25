@@ -16,11 +16,11 @@ string S_AsphaltPoorSkidFile = "RedFadeThicc.dds";
 
 // Dirt
 [Setting hidden]
-string S_DirtHighSkidFile = "BlueFadeThicc.dds";
+string S_DirtHighSkidFile = "BlueDirtFadeThicc.dds";
 [Setting hidden]
-string S_DirtMidSkidFile = "YellowFadeThicc.dds";
+string S_DirtMidSkidFile = "YellowDirtFadeThicc.dds";
 [Setting hidden]
-string S_DirtPoorSkidFile = "RedFadeThicc.dds";
+string S_DirtPoorSkidFile = "RedDirtFadeThicc.dds";
 
 // Grass
 [Setting hidden]

@@ -102,6 +102,88 @@ float ApplyLowSpeedForgiveness(float accelMax, float speedKmh, SkidSurface surfa
     return accelMax;
 }
 
+int TierRank(DriftTier tier) {
+    if (tier == DriftTier::Poor) return 1;
+    if (tier == DriftTier::Mid) return 2;
+    if (tier == DriftTier::High) return 3;
+    return 0;
+}
+
+DriftTier ApplyLandingLockoutGate(DriftTier candidateTier) {
+    if (landingLockoutMs <= 0) {
+        return candidateTier;
+    }
+
+    if (Time::Now >= landingLockoutUntilMs) {
+        return candidateTier;
+    }
+
+    if (TierRank(candidateTier) > TierRank(currentTier)) {
+        dbg("[Gate] Landing lockout blocked upgrade: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+            + " (remaining=" + int(landingLockoutUntilMs - Time::Now) + "ms)");
+        return currentTier;
+    }
+
+    return candidateTier;
+}
+
+DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
+    if (candidateTier == currentTier) {
+        pendingTier = currentTier;
+        pendingTierFrames = 0;
+        return currentTier;
+    }
+
+    int currentRank = TierRank(currentTier);
+    int candidateRank = TierRank(candidateTier);
+    bool isUpgrade = candidateRank > currentRank;
+
+    int requiredFrames = isUpgrade ? promotionPersistenceFrames : downgradePersistenceFrames;
+    if (isUpgrade
+        && postLandingImpactGuardMs > 0 && impactExtraPromotionFrames > 0 && impactSpikeThreshold > 0.0f
+        && Time::Now >= lastLandingTimeMs && Time::Now - lastLandingTimeMs <= uint64(postLandingImpactGuardMs)
+        && postLandingAccelDelta >= impactSpikeThreshold) {
+        requiredFrames += impactExtraPromotionFrames;
+        dbg("[Gate] Impact guard added frames: +" + impactExtraPromotionFrames
+            + " (delta=" + postLandingAccelDelta + ", required=" + requiredFrames + ")");
+    }
+
+    if (isUpgrade
+        && postBoostImpactGuardMs > 0 && boostExtraPromotionFrames > 0 && boostSpikeThreshold > 0.0f
+        && Time::Now >= lastBoostEndTimeMs && Time::Now - lastBoostEndTimeMs <= uint64(postBoostImpactGuardMs)
+        && postLandingAccelDelta >= boostSpikeThreshold) {
+        requiredFrames += boostExtraPromotionFrames;
+        dbg("[Gate] Boost guard added frames: +" + boostExtraPromotionFrames
+            + " (delta=" + postLandingAccelDelta + ", required=" + requiredFrames + ")");
+    }
+
+    if (requiredFrames <= 0) {
+        pendingTier = candidateTier;
+        pendingTierFrames = 0;
+        return candidateTier;
+    }
+
+    if (pendingTier != candidateTier) {
+        pendingTier = candidateTier;
+        pendingTierFrames = 1;
+        dbg("[Gate] Persistence started: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+            + " (1/" + requiredFrames + " frames)");
+        return currentTier;
+    }
+
+    if (pendingTierFrames < requiredFrames) {
+        pendingTierFrames += 1;
+        dbg("[Gate] Persistence holding: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+            + " (" + pendingTierFrames + "/" + requiredFrames + " frames)");
+    }
+
+    if (pendingTierFrames >= requiredFrames) {
+        return candidateTier;
+    }
+
+    return currentTier;
+}
+
 // --- Tier Selection ---
 DriftTier DetermineTargetTier(float driftQualityRatio) {
     if (isBoosted) {
@@ -152,9 +234,44 @@ void SimulationStep() {
     auto vis = VehicleState::ViewingPlayerState();
     if (vis is null) return;
 
+    float previousSlopeAdjustedAcceleration = slopeAdjustedAcceleration;
+    bool isBoostedNow = vis.IsTurbo;
+    if (wasBoostedLastFrame && !isBoostedNow) {
+        lastBoostEndTimeMs = Time::Now;
+    }
+    wasBoostedLastFrame = isBoostedNow;
+
     currentSurfaceMaterial = CSceneVehicleVisState::EPlugSurfaceMaterialId(vis.FLGroundContactMaterial);
-    isDrifting = vis.FLSlipCoef > 0 && currentSurfaceMaterial != CSceneVehicleVisState::EPlugSurfaceMaterialId::XXX_Null;
-    isBoosted = vis.IsTurbo;
+    bool isGrounded = currentSurfaceMaterial != CSceneVehicleVisState::EPlugSurfaceMaterialId::XXX_Null;
+    if (!wasGroundedLastFrame && isGrounded && landingLockoutMs > 0) {
+        landingLockoutUntilMs = Time::Now + uint64(landingLockoutMs);
+    }
+    if (!wasGroundedLastFrame && isGrounded) {
+        lastLandingTimeMs = Time::Now;
+    }
+    wasGroundedLastFrame = isGrounded;
+
+    float slipCoef = vis.FLSlipCoef;
+    if (!isGrounded) {
+        isDrifting = false;
+    } else {
+        float driftEnterSlipCoef = minSlipCoefToDrift;
+        float driftExitSlipCoef = Math::Max(0.0f, minSlipCoefToDrift - slipHysteresis);
+
+        bool wasDrifting = isDrifting;
+        if (isDrifting) {
+            isDrifting = slipCoef > driftExitSlipCoef;
+        } else {
+            isDrifting = slipCoef > driftEnterSlipCoef;
+        }
+
+        if (wasDrifting != isDrifting) {
+            dbg("[Drift] " + (isDrifting ? "Enter" : "Exit") + " slip hysteresis: slip=" + slipCoef
+                + ", enter=" + driftEnterSlipCoef + ", exit=" + driftExitSlipCoef);
+        }
+    }
+
+    isBoosted = isBoostedNow;
 
     worldNormalVec = vis.WorldCarUp;
     currentVelocity = vis.WorldVel;
@@ -198,6 +315,8 @@ void SimulationStep() {
     if (Math::Abs(slopeAdjustedAcceleration) < ACCEL_NOISE_FLOOR) {
         slopeAdjustedAcceleration = 0;
     }
+
+    postLandingAccelDelta = Math::Abs(slopeAdjustedAcceleration - previousSlopeAdjustedAcceleration);
 
     prevSpeed = scalarSpeed;
 }
