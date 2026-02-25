@@ -250,6 +250,40 @@ string TierName(DriftTier tier) {
     return "default";
 }
 
+void ResetRuntimeTuningDefaults() {
+    swapDebounceMs = 260;
+    greenSkidThreshold = 0.910f;
+    yellowSkidThreshold = 0.70f;
+    redSkidThreshold = 0.10f;
+    skidHysteresisUp = 0.015f;
+    skidHysteresisDown = 0.015f;
+
+    promotionPersistenceFrames = 4;
+    downgradePersistenceFrames = 4;
+    landingLockoutMs = 80;
+    minSlipCoefToDrift = 0.150f;
+    slipHysteresis = 0.020f;
+    postLandingImpactGuardMs = 60;
+    impactSpikeThreshold = 3.000f;
+    impactExtraPromotionFrames = 2;
+    postBoostImpactGuardMs = 100;
+    boostSpikeThreshold = 2.500f;
+    boostExtraPromotionFrames = 2;
+
+    lowSpeedForgivenessEnabled = true;
+    forgivenessMaxSpeed_Asphalt = 550.0f;
+    forgivenessMinSpeed_Asphalt = 400.0f;
+    forgivenessFactor_Asphalt = 0.90f;
+    forgivenessMaxSpeed_Dirt = 300.0f;
+    forgivenessMinSpeed_Dirt = 150.0f;
+    forgivenessFactor_Dirt = 0.90f;
+    forgivenessMaxSpeed_Grass = 300.0f;
+    forgivenessMinSpeed_Grass = 150.0f;
+    forgivenessFactor_Grass = 0.90f;
+
+    trace("[Settings] Runtime tuning reset to defaults.");
+}
+
 [SettingsTab name="Runtime" icon="Sliders"]
 void R_S_RuntimeSettingsTab() {
     UI::Separator();
@@ -259,6 +293,10 @@ void R_S_RuntimeSettingsTab() {
     greenSkidThreshold = UI::SliderFloat("Green Skid Threshold", greenSkidThreshold, 0.50f, 1.00f);
     yellowSkidThreshold = UI::SliderFloat("Yellow Skid Threshold", yellowSkidThreshold, 0.30f, 0.99f);
     redSkidThreshold = UI::SliderFloat("Red Skid Threshold", redSkidThreshold, 0.00f, 0.70f);
+
+    if (UI::Button("Reset Runtime Tuning Defaults")) {
+        ResetRuntimeTuningDefaults();
+    }
 
     UI::Separator();
 
@@ -366,6 +404,8 @@ void Main() {
     EnsureDir(SKIDS_SOURCE_DIR_GRASS);
 
     InstallBundledSkids();
+    RefreshAllSkidOptionLists();
+    EnsureConfiguredSkidFilesExist();
     RefreshTextureList();
 
     int totalTextures = TotalLoadedSkidTextures();

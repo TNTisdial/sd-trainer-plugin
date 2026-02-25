@@ -288,6 +288,46 @@ void RefreshAllSkidOptionLists() {
     ScanSkidFolder(SKID_OPTIONS_DIR_GRASS, skidOptionFiles_Grass, skidOptionPretty_Grass);
 }
 
+string ResolveConfiguredSkidFile(const array<string> &in availableFiles, const string &in currentFile, const string &in preferredFile) {
+    if (availableFiles.Find(currentFile) >= 0) return currentFile;
+    if (availableFiles.Find(preferredFile) >= 0) return preferredFile;
+    if (availableFiles.Find("Default.dds") >= 0) return "Default.dds";
+    if (availableFiles.Length > 0) return availableFiles[0];
+    return currentFile;
+}
+
+void EnsureConfiguredSkidFilesExist() {
+    string oldAsphaltHigh = S_AsphaltHighSkidFile;
+    string oldAsphaltMid = S_AsphaltMidSkidFile;
+    string oldAsphaltPoor = S_AsphaltPoorSkidFile;
+    S_AsphaltHighSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Asphalt, S_AsphaltHighSkidFile, "BlueFadeThicc.dds");
+    S_AsphaltMidSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Asphalt, S_AsphaltMidSkidFile, "YellowFadeThicc.dds");
+    S_AsphaltPoorSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Asphalt, S_AsphaltPoorSkidFile, "RedFadeThicc.dds");
+    if (oldAsphaltHigh != S_AsphaltHighSkidFile || oldAsphaltMid != S_AsphaltMidSkidFile || oldAsphaltPoor != S_AsphaltPoorSkidFile) {
+        warn("[SkidSettings] Asphalt selection auto-corrected to available files.");
+    }
+
+    string oldDirtHigh = S_DirtHighSkidFile;
+    string oldDirtMid = S_DirtMidSkidFile;
+    string oldDirtPoor = S_DirtPoorSkidFile;
+    S_DirtHighSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtHighSkidFile, "BlueDirtFadeThicc.dds");
+    S_DirtMidSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtMidSkidFile, "YellowDirtFadeThicc.dds");
+    S_DirtPoorSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtPoorSkidFile, "RedDirtFadeThicc.dds");
+    if (oldDirtHigh != S_DirtHighSkidFile || oldDirtMid != S_DirtMidSkidFile || oldDirtPoor != S_DirtPoorSkidFile) {
+        warn("[SkidSettings] Dirt selection auto-corrected to available files.");
+    }
+
+    string oldGrassHigh = S_GrassHighSkidFile;
+    string oldGrassMid = S_GrassMidSkidFile;
+    string oldGrassPoor = S_GrassPoorSkidFile;
+    S_GrassHighSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Grass, S_GrassHighSkidFile, "BlueFadeThicc.dds");
+    S_GrassMidSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Grass, S_GrassMidSkidFile, "YellowFadeThicc.dds");
+    S_GrassPoorSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Grass, S_GrassPoorSkidFile, "RedFadeThicc.dds");
+    if (oldGrassHigh != S_GrassHighSkidFile || oldGrassMid != S_GrassMidSkidFile || oldGrassPoor != S_GrassPoorSkidFile) {
+        warn("[SkidSettings] Grass selection auto-corrected to available files.");
+    }
+}
+
 void InitSkidSettings() {
     SKID_OPTIONS_DIR_ASPHALT = IO::FromUserGameFolder("Skins/Stadium/Skids/Asphalt/").Replace("\\", "/");
     SKID_OPTIONS_DIR_DIRT = IO::FromUserGameFolder("Skins/Stadium/Skids/Dirt/").Replace("\\", "/");
