@@ -16,6 +16,10 @@ Runtime UI action:
 
 - `Reset Runtime Tuning Defaults`: sets all Runtime tab tuning values back to code defaults.
 
+Runtime UI help:
+
+- Advanced Runtime controls show a hoverable `?` icon tooltip next to each setting.
+
 ## Dynamic colored skids
 
 Advanced (hidden by default):
@@ -54,6 +58,11 @@ Advanced (hidden by default):
 - `Post-Boost Impact Guard (ms)`: `100`
 - `Boost Spike Threshold`: `2.500`
 - `Boost Extra Promotion Frames`: `2`
+- `Allow Live Grading During Boost`: `true`
+- `Boost Baseline Follow Rate`: `0.080`
+- `Boost Headroom Scale`: `0.45`
+- `Uphill Slope Leniency`: `0.030`
+- `Downhill Slope Strictness`: `0.050`
 
 ## Low-speed forgiveness
 

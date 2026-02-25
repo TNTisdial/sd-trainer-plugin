@@ -34,12 +34,17 @@ If required files cannot be staged/primed, runtime colored swaps remain disabled
 
 When target tier changes and debounce passes:
 
-1. For each surface, resolve `from` and `to` filenames for current and target tiers.
+1. For each surface, resolve `to` filename for target tier and read tracked live filename for `from`.
 2. Ensure target staged file exists; if missing, restage from user `Skids/<Surface>/`.
-3. Move current live file back into source staged slot.
+3. Move current live file back into tracked source staged slot.
 4. Move target staged file into live slot.
-5. If promotion fails, attempt rollback from stashed source.
+5. If promotion fails, attempt rollback from stashed source and preserve tracked live filename.
 6. Refresh game textures after at least one surface changed.
+
+Notes:
+
+- Tracked per-surface live filenames avoid staged-slot mismatch after partial failures.
+- If `from == to` but live file is missing, runtime re-promotes the tracked file to live.
 
 Tier state is only committed when all surface swaps report success.
 

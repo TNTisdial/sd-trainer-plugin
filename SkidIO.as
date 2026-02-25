@@ -90,6 +90,28 @@ string TierToFilenameForSurface(DriftTier tier, SkidSurface surfaceKind) {
     return "Default.dds";
 }
 
+int SurfaceIndex(SkidSurface surfaceKind) {
+    if (surfaceKind == SkidSurface::Dirt) return 1;
+    if (surfaceKind == SkidSurface::Grass) return 2;
+    return 0;
+}
+
+string TrackedLiveFilename(SkidSurface surfaceKind) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(liveTextureBySurface.Length)) {
+        return "Default.dds";
+    }
+    return liveTextureBySurface[index];
+}
+
+void SetTrackedLiveFilename(SkidSurface surfaceKind, const string &in filename) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(liveTextureBySurface.Length)) {
+        return;
+    }
+    liveTextureBySurface[index] = filename;
+}
+
 // --- Texture Discovery ---
 void RefreshTextureListForSurface(array<string> &out list, const string &in srcDir) {
     list.RemoveRange(0, list.Length);
@@ -187,17 +209,41 @@ bool PrimeLiveDefaultsForAllSurfaces() {
             || !CopyFileAbs(StagedPath(surfaceKind, "Default.dds"), livePath)) {
             allPrimed = false;
             warn("[Init] Failed to prime live slot for " + SurfaceId(surfaceKind));
+        } else {
+            SetTrackedLiveFilename(surfaceKind, "Default.dds");
         }
     }
     return allPrimed;
 }
 
 // --- Live Swapping ---
-bool SwapSkidTextureForSurface(DriftTier fromTier, DriftTier toTier, SkidSurface surfaceKind) {
-    string fromFile = TierToFilenameForSurface(fromTier, surfaceKind);
+bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
+    string fromFile = TrackedLiveFilename(surfaceKind);
+    if (fromFile.Length == 0) {
+        fromFile = "Default.dds";
+    }
     string toFile = TierToFilenameForSurface(toTier, surfaceKind);
+    string livePath = LivePath(surfaceKind);
+    string sourceStagedPath = StagedPath(surfaceKind, fromFile);
+    string targetStagedPath = StagedPath(surfaceKind, toFile);
 
     if (fromFile == toFile) {
+        if (IO::FileExists(livePath)) {
+            return true;
+        }
+
+        if (!EnsureStagedTexture(surfaceKind, toFile)) {
+            return false;
+        }
+
+        IO::Move(targetStagedPath, livePath);
+        if (!IO::FileExists(livePath)) {
+            warn("[IO ERROR] Failed to re-promote missing live texture: " + livePath);
+            return false;
+        }
+
+        SetTrackedLiveFilename(surfaceKind, toFile);
+        dbg("[IO] Re-promoted tracked live texture: " + SurfaceId(surfaceKind) + " (" + toFile + ")");
         return true;
     }
 
@@ -205,11 +251,9 @@ bool SwapSkidTextureForSurface(DriftTier fromTier, DriftTier toTier, SkidSurface
         return false;
     }
 
-    string livePath = LivePath(surfaceKind);
-    string sourceStagedPath = StagedPath(surfaceKind, fromFile);
-    string targetStagedPath = StagedPath(surfaceKind, toFile);
+    bool hadLive = IO::FileExists(livePath);
 
-    if (IO::FileExists(livePath)) {
+    if (hadLive) {
         if (IO::FileExists(sourceStagedPath)) {
             IO::Delete(sourceStagedPath);
         }
@@ -224,13 +268,19 @@ bool SwapSkidTextureForSurface(DriftTier fromTier, DriftTier toTier, SkidSurface
     IO::Move(targetStagedPath, livePath);
     if (!IO::FileExists(livePath)) {
         warn("[IO ERROR] Failed to promote texture to live path: " + livePath);
-        if (IO::FileExists(sourceStagedPath)) {
+        if (hadLive && IO::FileExists(sourceStagedPath)) {
             IO::Move(sourceStagedPath, livePath);
+            if (IO::FileExists(livePath)) {
+                SetTrackedLiveFilename(surfaceKind, fromFile);
+                warn("[IO] Restored previous live texture after failed promote: " + SurfaceId(surfaceKind)
+                    + " (" + fromFile + ")");
+            }
         }
         return false;
     }
 
-    dbg("[IO] Promoted " + toFile + " -> live (" + SurfaceId(surfaceKind) + ")");
+    SetTrackedLiveFilename(surfaceKind, toFile);
+    dbg("[IO] Promoted " + toFile + " -> live (" + SurfaceId(surfaceKind) + ", previous=" + fromFile + ")");
     return true;
 }
 
@@ -245,7 +295,7 @@ bool SwapSkidTextureAllSurfaces(DriftTier targetTier, bool &out anyChanged) {
         }
 
         anyChanged = true;
-        if (!SwapSkidTextureForSurface(currentTier, targetTier, surfaceKind)) {
+        if (!SwapSkidTextureForSurface(targetTier, surfaceKind)) {
             allOk = false;
         }
     }
@@ -515,6 +565,9 @@ void CleanupModWork() {
 
     stagedFilesReady = false;
     currentTier = DriftTier::Default;
+    for (uint i = 0; i < kSurfaces.Length; i++) {
+        SetTrackedLiveFilename(kSurfaces[i], "Default.dds");
+    }
     RefreshGameTextures();
 }
 

@@ -20,15 +20,14 @@ float CalculateAngle(vec3 vector1, vec3 vector2) {
     float magVector2 = CalculateVectorMagnitude(vector2);
     float hypot = magVector1 * magVector2;
 
-    if (adjacent < 0.000001f || adjacent > hypot) {
+    if (hypot < 0.000001f) {
         return 0;
     }
 
-    if (hypot < 0.000001f) {
-        hypot = 0.000001f;
-    }
+    float ratio = adjacent / hypot;
+    ratio = Math::Clamp(ratio, -1.0f, 1.0f);
 
-    return Math::Acos(Math::Abs(adjacent / hypot)) * 1000;
+    return Math::Acos(ratio) * 1000;
 }
 
 void CalculateVelocityAngleDelta() {
@@ -186,7 +185,7 @@ DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
 
 // --- Tier Selection ---
 DriftTier DetermineTargetTier(float driftQualityRatio) {
-    if (isBoosted) {
+    if (isBoosted && !allowLiveBoostGrading) {
         return currentTier;
     }
 
@@ -236,6 +235,10 @@ void SimulationStep() {
 
     float previousSlopeAdjustedAcceleration = slopeAdjustedAcceleration;
     bool isBoostedNow = vis.IsTurbo;
+    if (!wasBoostedLastFrame && isBoostedNow) {
+        boostBaselineReady = false;
+        boostBaselineAccel = 0.0f;
+    }
     if (wasBoostedLastFrame && !isBoostedNow) {
         lastBoostEndTimeMs = Time::Now;
     }
@@ -283,6 +286,7 @@ void SimulationStep() {
     }
 
     float slopeEstimate = Math::Atan(currentVelocity.y / xzChangeEstimate);
+    currentSlopeEstimateRad = slopeEstimate;
     CalculateVelocityAngleDelta();
 
     float frontSpeed = vis.FrontSpeed;
@@ -314,6 +318,17 @@ void SimulationStep() {
     slopeAdjustedAcceleration = sum / ACCEL_ARRAY_SIZE;
     if (Math::Abs(slopeAdjustedAcceleration) < ACCEL_NOISE_FLOOR) {
         slopeAdjustedAcceleration = 0;
+    }
+
+    if (isBoostedNow && !isDrifting) {
+        if (!boostBaselineReady) {
+            boostBaselineAccel = slopeAdjustedAcceleration;
+            boostBaselineReady = true;
+            dbg("[Boost] Baseline primed while not drifting: " + boostBaselineAccel);
+        } else {
+            float followRate = Math::Clamp(boostBaselineFollowRate, 0.01f, 0.40f);
+            boostBaselineAccel = Math::Lerp(boostBaselineAccel, slopeAdjustedAcceleration, followRate);
+        }
     }
 
     postLandingAccelDelta = Math::Abs(slopeAdjustedAcceleration - previousSlopeAdjustedAcceleration);

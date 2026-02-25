@@ -94,6 +94,21 @@ float boostSpikeThreshold = 2.500f;
 [Setting hidden name="Boost Extra Promotion Frames" description="Extra upgrade persistence frames applied during post-boost spikes."]
 int boostExtraPromotionFrames = 2;
 
+[Setting hidden name="Allow Live Grading During Boost" description="If enabled, boosted runs are graded live using boost-relative acceleration instead of freezing the current tier."]
+bool allowLiveBoostGrading = true;
+
+[Setting hidden name="Boost Baseline Follow Rate" description="EMA follow rate for boost baseline while boosted and not drifting. Higher tracks changes faster."]
+float boostBaselineFollowRate = 0.080f;
+
+[Setting hidden name="Boost Headroom Scale" description="Scales grading denominator while boosted. Lower = easier to reach high tiers under boost."]
+float boostHeadroomScale = 0.45f;
+
+[Setting hidden name="Uphill Slope Leniency" description="Slight ratio boost while moving uphill. 0 disables uphill slope bias."]
+float uphillSlopeLeniency = 0.030f;
+
+[Setting hidden name="Downhill Slope Strictness" description="Slight ratio reduction while moving downhill. 0 disables downhill slope bias."]
+float downhillSlopeStrictness = 0.050f;
+
 [Setting hidden name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
 bool lowSpeedForgivenessEnabled = true;
 
@@ -145,6 +160,7 @@ CSceneVehicleVisState::EPlugSurfaceMaterialId currentSurfaceMaterial;
 
 float averageAcceleration = 0;
 float slopeAdjustedAcceleration = 0;
+float currentSlopeEstimateRad = 0.0f;
 float frameDtMs = 0;
 
 string MODWORK_FOLDER;
@@ -163,10 +179,13 @@ uint64 lastLandingTimeMs = 0;
 float postLandingAccelDelta = 0.0f;
 bool wasBoostedLastFrame = false;
 uint64 lastBoostEndTimeMs = 0;
+float boostBaselineAccel = 0.0f;
+bool boostBaselineReady = false;
 
 array<string> skidTexturesAsphalt;
 array<string> skidTexturesDirt;
 array<string> skidTexturesGrass;
+array<string> liveTextureBySurface = {"Default.dds", "Default.dds", "Default.dds"};
 
 bool stagedFilesReady = false;
 string bundledSkidsRoot;
@@ -191,6 +210,11 @@ int _prev_impactExtraPromotionFrames = 0;
 int _prev_postBoostImpactGuardMs = 0;
 float _prev_boostSpikeThreshold = 0.00f;
 int _prev_boostExtraPromotionFrames = 0;
+bool _prev_allowLiveBoostGrading = true;
+float _prev_boostBaselineFollowRate = 0.080f;
+float _prev_boostHeadroomScale = 0.45f;
+float _prev_uphillSlopeLeniency = 0.030f;
+float _prev_downhillSlopeStrictness = 0.050f;
 bool _prev_lowSpeedForgivenessEnabled = true;
 float _prev_forgivenessMaxSpeed_Asphalt = 550.0f;
 float _prev_forgivenessMinSpeed_Asphalt = 400.0f;
@@ -205,6 +229,16 @@ float _prev_forgivenessFactor_Grass = 0.90f;
 // --- Helpers ---
 void dbg(const string &in msg) {
     if (debugLogging) trace(msg);
+}
+
+void DrawHelpIcon(const string &in infoText) {
+    UI::SameLine();
+    UI::Text(Icons::QuestionCircle);
+    if (UI::IsItemHovered()) {
+        UI::BeginTooltip();
+        UI::TextWrapped(infoText);
+        UI::EndTooltip();
+    }
 }
 
 bool TrackSettingChangeBool(const string &in label, bool current, bool previous) {
@@ -269,6 +303,11 @@ void ResetRuntimeTuningDefaults() {
     postBoostImpactGuardMs = 100;
     boostSpikeThreshold = 2.500f;
     boostExtraPromotionFrames = 2;
+    allowLiveBoostGrading = true;
+    boostBaselineFollowRate = 0.080f;
+    boostHeadroomScale = 0.45f;
+    uphillSlopeLeniency = 0.030f;
+    downhillSlopeStrictness = 0.050f;
 
     lowSpeedForgivenessEnabled = true;
     forgivenessMaxSpeed_Asphalt = 550.0f;
@@ -284,6 +323,41 @@ void ResetRuntimeTuningDefaults() {
     trace("[Settings] Runtime tuning reset to defaults.");
 }
 
+float ComputeDriftQualityRatio(float adjustedMaxAccelSpeedSlide) {
+    float denom = Math::Max(MIN_ACCEL_DENOM, adjustedMaxAccelSpeedSlide);
+    float numerator = slopeAdjustedAcceleration;
+
+    if (isBoosted && allowLiveBoostGrading) {
+        if (!boostBaselineReady) {
+            boostBaselineAccel = slopeAdjustedAcceleration;
+            boostBaselineReady = true;
+            dbg("[Boost] Initialized baseline accel=" + boostBaselineAccel);
+        }
+
+        numerator = slopeAdjustedAcceleration - boostBaselineAccel;
+        float headroomScale = Math::Max(0.05f, boostHeadroomScale);
+        denom = Math::Max(MIN_ACCEL_DENOM, denom * headroomScale);
+    }
+
+    float ratio = numerator / denom;
+
+    float slopeDeg = currentSlopeEstimateRad * 57.29578f;
+    float slopeNorm = Math::Clamp(slopeDeg / 10.0f, -1.0f, 1.0f);
+    if (slopeNorm > 0.0f && uphillSlopeLeniency > 0.0f) {
+        ratio += uphillSlopeLeniency * slopeNorm;
+    } else if (slopeNorm < 0.0f && downhillSlopeStrictness > 0.0f) {
+        ratio -= downhillSlopeStrictness * -slopeNorm;
+    }
+
+    if (ratio > 1.0f) {
+        return 1.0f;
+    }
+    if (ratio < -1.0f) {
+        return -1.0f;
+    }
+    return ratio;
+}
+
 [SettingsTab name="Runtime" icon="Sliders"]
 void R_S_RuntimeSettingsTab() {
     UI::Separator();
@@ -291,8 +365,11 @@ void R_S_RuntimeSettingsTab() {
     UI::Text("Tier thresholds (driftQualityRatio)");
     UI::TextWrapped("Reference: 1.00 is a perfect SD.");
     greenSkidThreshold = UI::SliderFloat("Green Skid Threshold", greenSkidThreshold, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color.");
     yellowSkidThreshold = UI::SliderFloat("Yellow Skid Threshold", yellowSkidThreshold, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color.");
     redSkidThreshold = UI::SliderFloat("Red Skid Threshold", redSkidThreshold, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color. Below this stays default.");
 
     if (UI::Button("Reset Runtime Tuning Defaults")) {
         ResetRuntimeTuningDefaults();
@@ -310,6 +387,7 @@ void R_S_RuntimeSettingsTab() {
 
     int swapDebounceInt = Math::Clamp(int(swapDebounceMs), 50, 2000);
     int newSwapDebounceInt = UI::SliderInt("Swap Debounce (ms)", swapDebounceInt, 50, 2000);
+    DrawHelpIcon("Minimum time between skid texture swaps. Higher values reduce flicker but add response delay.");
     if (newSwapDebounceInt != swapDebounceInt) {
         swapDebounceMs = uint64(newSwapDebounceInt);
     }
@@ -317,21 +395,43 @@ void R_S_RuntimeSettingsTab() {
     UI::Separator();
     UI::Text("Hysteresis");
     skidHysteresisUp = UI::SliderFloat("Upgrade Hysteresis", skidHysteresisUp, 0.00f, 0.15f);
+    DrawHelpIcon("Extra ratio required to upgrade tiers. Higher means harder to upgrade.");
     skidHysteresisDown = UI::SliderFloat("Downgrade Hysteresis", skidHysteresisDown, 0.00f, 0.15f);
+    DrawHelpIcon("Buffer before downgrading tiers. Lower means faster downgrades.");
 
     UI::Separator();
     UI::Text("Stability Filters");
     promotionPersistenceFrames = UI::SliderInt("Promotion Persistence Frames", promotionPersistenceFrames, 0, 12);
+    DrawHelpIcon("Frames required before a tier upgrade is accepted.");
     downgradePersistenceFrames = UI::SliderInt("Downgrade Persistence Frames", downgradePersistenceFrames, 0, 12);
+    DrawHelpIcon("Frames required before a tier downgrade is accepted.");
     landingLockoutMs = UI::SliderInt("Landing Lockout (ms)", landingLockoutMs, 0, 400);
+    DrawHelpIcon("Temporarily blocks tier upgrades right after landing.");
     minSlipCoefToDrift = UI::SliderFloat("Min SlipCoef To Drift", minSlipCoefToDrift, 0.00f, 0.30f);
+    DrawHelpIcon("Minimum FLSlipCoef required to count as drifting.");
     slipHysteresis = UI::SliderFloat("Slip Hysteresis", slipHysteresis, 0.00f, 0.15f);
+    DrawHelpIcon("Exit threshold margin for drift detection. Exit = min slip - hysteresis.");
     postLandingImpactGuardMs = UI::SliderInt("Post-Landing Impact Guard (ms)", postLandingImpactGuardMs, 0, 300);
+    DrawHelpIcon("Time window after landing where impact spikes can add upgrade persistence.");
     impactSpikeThreshold = UI::SliderFloat("Impact Spike Threshold", impactSpikeThreshold, 0.00f, 20.00f);
+    DrawHelpIcon("Minimum acceleration delta to classify a post-landing spike.");
     impactExtraPromotionFrames = UI::SliderInt("Impact Extra Promotion Frames", impactExtraPromotionFrames, 0, 8);
+    DrawHelpIcon("Extra upgrade persistence frames added during post-landing spikes.");
     postBoostImpactGuardMs = UI::SliderInt("Post-Boost Impact Guard (ms)", postBoostImpactGuardMs, 0, 300);
+    DrawHelpIcon("Time window after boost ends where spikes can add upgrade persistence.");
     boostSpikeThreshold = UI::SliderFloat("Boost Spike Threshold", boostSpikeThreshold, 0.00f, 20.00f);
+    DrawHelpIcon("Minimum acceleration delta to classify a post-boost spike.");
     boostExtraPromotionFrames = UI::SliderInt("Boost Extra Promotion Frames", boostExtraPromotionFrames, 0, 8);
+    DrawHelpIcon("Extra upgrade persistence frames added during post-boost spikes.");
+    allowLiveBoostGrading = UI::Checkbox("Allow Live Grading During Boost", allowLiveBoostGrading);
+    boostBaselineFollowRate = UI::SliderFloat("Boost Baseline Follow Rate", boostBaselineFollowRate, 0.01f, 0.40f);
+    DrawHelpIcon("How quickly boost baseline acceleration adapts while boosted and not drifting.");
+    boostHeadroomScale = UI::SliderFloat("Boost Headroom Scale", boostHeadroomScale, 0.10f, 1.00f);
+    DrawHelpIcon("Scales grading denominator during boost. Lower values make boost grading more lenient.");
+    uphillSlopeLeniency = UI::SliderFloat("Uphill Slope Leniency", uphillSlopeLeniency, 0.00f, 0.12f);
+    DrawHelpIcon("Adds a small ratio bonus while moving uphill.");
+    downhillSlopeStrictness = UI::SliderFloat("Downhill Slope Strictness", downhillSlopeStrictness, 0.00f, 0.12f);
+    DrawHelpIcon("Applies a small ratio penalty while moving downhill.");
 
     UI::Separator();
     lowSpeedForgivenessEnabled = UI::Checkbox("Low Speed Forgiveness", lowSpeedForgivenessEnabled);
@@ -340,18 +440,27 @@ void R_S_RuntimeSettingsTab() {
 
     UI::Text("Asphalt");
     forgivenessMinSpeed_Asphalt = UI::SliderFloat("Asphalt Forgiveness Min Speed", forgivenessMinSpeed_Asphalt, 400.0f, 600.0f);
+    DrawHelpIcon("At or below this speed, maximum asphalt forgiveness is applied.");
     forgivenessMaxSpeed_Asphalt = UI::SliderFloat("Asphalt Forgiveness Max Speed", forgivenessMaxSpeed_Asphalt, 500.0f, 900.0f);
+    DrawHelpIcon("At or above this speed, asphalt forgiveness is fully disabled.");
     forgivenessFactor_Asphalt = UI::SliderFloat("Asphalt Forgiveness Factor", forgivenessFactor_Asphalt, 0.60f, 1.00f);
+    DrawHelpIcon("Multiplier applied at minimum speed. Lower = more forgiving.");
 
     UI::Text("Dirt");
     forgivenessMinSpeed_Dirt = UI::SliderFloat("Dirt Forgiveness Min Speed", forgivenessMinSpeed_Dirt, 50.0f, 300.0f);
+    DrawHelpIcon("At or below this speed, maximum dirt forgiveness is applied.");
     forgivenessMaxSpeed_Dirt = UI::SliderFloat("Dirt Forgiveness Max Speed", forgivenessMaxSpeed_Dirt, 100.0f, 500.0f);
+    DrawHelpIcon("At or above this speed, dirt forgiveness is fully disabled.");
     forgivenessFactor_Dirt = UI::SliderFloat("Dirt Forgiveness Factor", forgivenessFactor_Dirt, 0.60f, 1.00f);
+    DrawHelpIcon("Multiplier applied at minimum speed. Lower = more forgiving.");
 
     UI::Text("Grass");
     forgivenessMinSpeed_Grass = UI::SliderFloat("Grass Forgiveness Min Speed", forgivenessMinSpeed_Grass, 50.0f, 300.0f);
+    DrawHelpIcon("At or below this speed, maximum grass forgiveness is applied.");
     forgivenessMaxSpeed_Grass = UI::SliderFloat("Grass Forgiveness Max Speed", forgivenessMaxSpeed_Grass, 100.0f, 500.0f);
+    DrawHelpIcon("At or above this speed, grass forgiveness is fully disabled.");
     forgivenessFactor_Grass = UI::SliderFloat("Grass Forgiveness Factor", forgivenessFactor_Grass, 0.60f, 1.00f);
+    DrawHelpIcon("Multiplier applied at minimum speed. Lower = more forgiving.");
 }
 
 // --- Main Entrypoints ---
@@ -376,6 +485,11 @@ void OnSettingsChanged() {
     if (TrackSettingChangeInt("Post-Boost Impact Guard (ms)", postBoostImpactGuardMs, _prev_postBoostImpactGuardMs)) _prev_postBoostImpactGuardMs = postBoostImpactGuardMs;
     if (TrackSettingChangeFloat("Boost Spike Threshold", boostSpikeThreshold, _prev_boostSpikeThreshold)) _prev_boostSpikeThreshold = boostSpikeThreshold;
     if (TrackSettingChangeInt("Boost Extra Promotion Frames", boostExtraPromotionFrames, _prev_boostExtraPromotionFrames)) _prev_boostExtraPromotionFrames = boostExtraPromotionFrames;
+    if (TrackSettingChangeBool("Allow Live Grading During Boost", allowLiveBoostGrading, _prev_allowLiveBoostGrading)) _prev_allowLiveBoostGrading = allowLiveBoostGrading;
+    if (TrackSettingChangeFloat("Boost Baseline Follow Rate", boostBaselineFollowRate, _prev_boostBaselineFollowRate)) _prev_boostBaselineFollowRate = boostBaselineFollowRate;
+    if (TrackSettingChangeFloat("Boost Headroom Scale", boostHeadroomScale, _prev_boostHeadroomScale)) _prev_boostHeadroomScale = boostHeadroomScale;
+    if (TrackSettingChangeFloat("Uphill Slope Leniency", uphillSlopeLeniency, _prev_uphillSlopeLeniency)) _prev_uphillSlopeLeniency = uphillSlopeLeniency;
+    if (TrackSettingChangeFloat("Downhill Slope Strictness", downhillSlopeStrictness, _prev_downhillSlopeStrictness)) _prev_downhillSlopeStrictness = downhillSlopeStrictness;
     if (TrackSettingChangeBool("Low Speed Forgiveness", lowSpeedForgivenessEnabled, _prev_lowSpeedForgivenessEnabled)) _prev_lowSpeedForgivenessEnabled = lowSpeedForgivenessEnabled;
     if (TrackSettingChangeFloat("Asphalt Forgiveness Max Speed", forgivenessMaxSpeed_Asphalt, _prev_forgivenessMaxSpeed_Asphalt)) _prev_forgivenessMaxSpeed_Asphalt = forgivenessMaxSpeed_Asphalt;
     if (TrackSettingChangeFloat("Asphalt Forgiveness Min Speed", forgivenessMinSpeed_Asphalt, _prev_forgivenessMinSpeed_Asphalt)) _prev_forgivenessMinSpeed_Asphalt = forgivenessMinSpeed_Asphalt;
@@ -458,13 +572,7 @@ void Render() {
         adjustedMaxAccelSpeedSlide = ApplyLowSpeedForgiveness(adjustedMaxAccelSpeedSlide, speedKmh, SurfaceFromMaterial(currentSurfaceMaterial));
     }
 
-    float denom = Math::Max(MIN_ACCEL_DENOM, adjustedMaxAccelSpeedSlide);
-    float driftQualityRatio = slopeAdjustedAcceleration / denom;
-    if (driftQualityRatio > 1.0f) {
-        driftQualityRatio = 1.0f;
-    } else if (driftQualityRatio < -1.0f) {
-        driftQualityRatio = -1.0f;
-    }
+    float driftQualityRatio = ComputeDriftQualityRatio(adjustedMaxAccelSpeedSlide);
 
     DriftTier targetTier = DetermineTargetTier(driftQualityRatio);
     targetTier = ApplyLandingLockoutGate(targetTier);
