@@ -283,7 +283,7 @@ void Render() {
     float driftQualityRatio = ComputeDriftQualityRatio(adjustedMaxAccelSpeedSlide);
 
     DriftTier currentSurfaceTier = CurrentTierForSurface(activeSurface);
-    DriftTier targetTier = DetermineTargetTier(driftQualityRatio, currentSurfaceTier);
+    DriftTier targetTier = DetermineTargetTier(driftQualityRatio, activeSurface, currentSurfaceTier);
     targetTier = ApplyLandingLockoutGate(targetTier, activeSurface, currentSurfaceTier);
     targetTier = ApplyTierPersistenceGate(targetTier, activeSurface, currentSurfaceTier);
 

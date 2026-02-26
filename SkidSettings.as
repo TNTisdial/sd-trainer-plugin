@@ -17,14 +17,32 @@ bool showAdvancedSettings = false;
 [Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min=50 max=2000 drag]
 uint swapDebounceMs = 260;
 
-[Setting hidden name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
-float greenSkidThreshold = 0.910f;
+[Setting hidden name="Asphalt Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on asphalt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+float greenSkidThreshold_Asphalt = 0.910f;
 
-[Setting hidden name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
-float yellowSkidThreshold = 0.70f;
+[Setting hidden name="Asphalt Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on asphalt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+float yellowSkidThreshold_Asphalt = 0.70f;
 
-[Setting hidden name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
-float redSkidThreshold = 0.10f;
+[Setting hidden name="Asphalt Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on asphalt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+float redSkidThreshold_Asphalt = 0.10f;
+
+[Setting hidden name="Dirt Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on dirt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+float greenSkidThreshold_Dirt = 0.910f;
+
+[Setting hidden name="Dirt Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on dirt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+float yellowSkidThreshold_Dirt = 0.70f;
+
+[Setting hidden name="Dirt Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on dirt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+float redSkidThreshold_Dirt = 0.10f;
+
+[Setting hidden name="Grass Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on grass. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+float greenSkidThreshold_Grass = 0.910f;
+
+[Setting hidden name="Grass Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on grass. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+float yellowSkidThreshold_Grass = 0.70f;
+
+[Setting hidden name="Grass Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on grass. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+float redSkidThreshold_Grass = 0.10f;
 
 [Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min=0.0 max=0.15 drag]
 float skidHysteresisUp = 0.015f;
@@ -120,9 +138,15 @@ float forgivenessFactor_Grass = 0.90f;
 bool _prev_pluginEnabled = true;
 bool _prev_useSlopeAdjustedAcc = true;
 uint _prev_swapDebounceMs = 225;
-float _prev_greenSkidThreshold = 0.93f;
-float _prev_yellowSkidThreshold = 0.70f;
-float _prev_redSkidThreshold = 0.10f;
+float _prev_greenSkidThreshold_Asphalt = 0.93f;
+float _prev_yellowSkidThreshold_Asphalt = 0.70f;
+float _prev_redSkidThreshold_Asphalt = 0.10f;
+float _prev_greenSkidThreshold_Dirt = 0.93f;
+float _prev_yellowSkidThreshold_Dirt = 0.70f;
+float _prev_redSkidThreshold_Dirt = 0.10f;
+float _prev_greenSkidThreshold_Grass = 0.93f;
+float _prev_yellowSkidThreshold_Grass = 0.70f;
+float _prev_redSkidThreshold_Grass = 0.10f;
 float _prev_skidHysteresisUp = 0.015f;
 float _prev_skidHysteresisDown = 0.015f;
 int _prev_promotionPersistenceFrames = 0;
@@ -210,9 +234,15 @@ void DrawHelpIcon(const string &in infoText) {
 
 void ResetRuntimeTuningDefaults() {
     swapDebounceMs = 260;
-    greenSkidThreshold = 0.910f;
-    yellowSkidThreshold = 0.70f;
-    redSkidThreshold = 0.10f;
+    greenSkidThreshold_Asphalt = 0.910f;
+    yellowSkidThreshold_Asphalt = 0.70f;
+    redSkidThreshold_Asphalt = 0.10f;
+    greenSkidThreshold_Dirt = 0.910f;
+    yellowSkidThreshold_Dirt = 0.70f;
+    redSkidThreshold_Dirt = 0.10f;
+    greenSkidThreshold_Grass = 0.910f;
+    yellowSkidThreshold_Grass = 0.70f;
+    redSkidThreshold_Grass = 0.10f;
     skidHysteresisUp = 0.015f;
     skidHysteresisDown = 0.015f;
 
@@ -255,12 +285,29 @@ void R_S_RuntimeSettingsTab() {
 
     UI::Text("Tier thresholds (driftQualityRatio)");
     UI::TextWrapped("Reference: 1.00 is a perfect SD.");
-    greenSkidThreshold = UI::SliderFloat("Green Skid Threshold", greenSkidThreshold, 0.50f, 1.00f);
-    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color.");
-    yellowSkidThreshold = UI::SliderFloat("Yellow Skid Threshold", yellowSkidThreshold, 0.30f, 0.99f);
-    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color.");
-    redSkidThreshold = UI::SliderFloat("Red Skid Threshold", redSkidThreshold, 0.00f, 0.70f);
-    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color. Below this stays default.");
+    UI::Text("Asphalt");
+    greenSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Green Skid Threshold", greenSkidThreshold_Asphalt, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on asphalt.");
+    yellowSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Yellow Skid Threshold", yellowSkidThreshold_Asphalt, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on asphalt.");
+    redSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Red Skid Threshold", redSkidThreshold_Asphalt, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on asphalt. Below this stays default.");
+
+    UI::Text("Dirt");
+    greenSkidThreshold_Dirt = UI::SliderFloat("Dirt Green Skid Threshold", greenSkidThreshold_Dirt, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on dirt.");
+    yellowSkidThreshold_Dirt = UI::SliderFloat("Dirt Yellow Skid Threshold", yellowSkidThreshold_Dirt, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on dirt.");
+    redSkidThreshold_Dirt = UI::SliderFloat("Dirt Red Skid Threshold", redSkidThreshold_Dirt, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on dirt. Below this stays default.");
+
+    UI::Text("Grass");
+    greenSkidThreshold_Grass = UI::SliderFloat("Grass Green Skid Threshold", greenSkidThreshold_Grass, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on grass.");
+    yellowSkidThreshold_Grass = UI::SliderFloat("Grass Yellow Skid Threshold", yellowSkidThreshold_Grass, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on grass.");
+    redSkidThreshold_Grass = UI::SliderFloat("Grass Red Skid Threshold", redSkidThreshold_Grass, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on grass. Below this stays default.");
 
     if (UI::Button("Reset Runtime Tuning Defaults")) {
         ResetRuntimeTuningDefaults();
@@ -388,9 +435,15 @@ void OnSettingsChanged() {
     if (TrackSettingChangeBool("Enable Plugin", pluginEnabled, _prev_pluginEnabled)) _prev_pluginEnabled = pluginEnabled;
     if (TrackSettingChangeBool("Gravity Adjustment", useSlopeAdjustedAcc, _prev_useSlopeAdjustedAcc)) _prev_useSlopeAdjustedAcc = useSlopeAdjustedAcc;
     if (TrackSettingChangeUint("Swap Debounce (ms)", swapDebounceMs, _prev_swapDebounceMs)) _prev_swapDebounceMs = swapDebounceMs;
-    if (TrackSettingChangeFloat("Green Threshold", greenSkidThreshold, _prev_greenSkidThreshold)) _prev_greenSkidThreshold = greenSkidThreshold;
-    if (TrackSettingChangeFloat("Yellow Threshold", yellowSkidThreshold, _prev_yellowSkidThreshold)) _prev_yellowSkidThreshold = yellowSkidThreshold;
-    if (TrackSettingChangeFloat("Red Threshold", redSkidThreshold, _prev_redSkidThreshold)) _prev_redSkidThreshold = redSkidThreshold;
+    if (TrackSettingChangeFloat("Asphalt Green Threshold", greenSkidThreshold_Asphalt, _prev_greenSkidThreshold_Asphalt)) _prev_greenSkidThreshold_Asphalt = greenSkidThreshold_Asphalt;
+    if (TrackSettingChangeFloat("Asphalt Yellow Threshold", yellowSkidThreshold_Asphalt, _prev_yellowSkidThreshold_Asphalt)) _prev_yellowSkidThreshold_Asphalt = yellowSkidThreshold_Asphalt;
+    if (TrackSettingChangeFloat("Asphalt Red Threshold", redSkidThreshold_Asphalt, _prev_redSkidThreshold_Asphalt)) _prev_redSkidThreshold_Asphalt = redSkidThreshold_Asphalt;
+    if (TrackSettingChangeFloat("Dirt Green Threshold", greenSkidThreshold_Dirt, _prev_greenSkidThreshold_Dirt)) _prev_greenSkidThreshold_Dirt = greenSkidThreshold_Dirt;
+    if (TrackSettingChangeFloat("Dirt Yellow Threshold", yellowSkidThreshold_Dirt, _prev_yellowSkidThreshold_Dirt)) _prev_yellowSkidThreshold_Dirt = yellowSkidThreshold_Dirt;
+    if (TrackSettingChangeFloat("Dirt Red Threshold", redSkidThreshold_Dirt, _prev_redSkidThreshold_Dirt)) _prev_redSkidThreshold_Dirt = redSkidThreshold_Dirt;
+    if (TrackSettingChangeFloat("Grass Green Threshold", greenSkidThreshold_Grass, _prev_greenSkidThreshold_Grass)) _prev_greenSkidThreshold_Grass = greenSkidThreshold_Grass;
+    if (TrackSettingChangeFloat("Grass Yellow Threshold", yellowSkidThreshold_Grass, _prev_yellowSkidThreshold_Grass)) _prev_yellowSkidThreshold_Grass = yellowSkidThreshold_Grass;
+    if (TrackSettingChangeFloat("Grass Red Threshold", redSkidThreshold_Grass, _prev_redSkidThreshold_Grass)) _prev_redSkidThreshold_Grass = redSkidThreshold_Grass;
     if (TrackSettingChangeFloat("Upgrade Hysteresis", skidHysteresisUp, _prev_skidHysteresisUp)) _prev_skidHysteresisUp = skidHysteresisUp;
     if (TrackSettingChangeFloat("Downgrade Hysteresis", skidHysteresisDown, _prev_skidHysteresisDown)) _prev_skidHysteresisDown = skidHysteresisDown;
     if (TrackSettingChangeInt("Promotion Persistence Frames", promotionPersistenceFrames, _prev_promotionPersistenceFrames)) _prev_promotionPersistenceFrames = promotionPersistenceFrames;

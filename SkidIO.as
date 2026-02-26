@@ -645,7 +645,7 @@ void InstallBundledSkidsForSurface(SkidSurface surfaceKind) {
 void InstallBundledSkids() {
     bundledSkidsRoot = ResolveBundledSkidsRoot();
     if (bundledSkidsRoot.Length == 0) {
-        warn("[Install] Could not resolve plugin SkidOptions folder. Trying GitHub fallback.");
+        trace("[Install] Packaged SkidOptions not accessible in this install; using GitHub fallback for missing files.");
         if (!DownloadBundledSkidsFromRemote()) {
             warn("[Install] GitHub fallback did not fully complete; missing files may remain.");
         }

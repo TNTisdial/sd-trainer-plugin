@@ -247,7 +247,27 @@ DriftTier ApplyTierPersistenceGate(DriftTier candidateTier, SkidSurface surfaceK
 
 // --- Tier Selection ---
 // Hysteresis is used to prevent the tier from changing too rapidly
-DriftTier DetermineTargetTier(float driftQualityRatio, DriftTier currentTierForSurface) {
+void GetTierThresholdsForSurface(SkidSurface surfaceKind, float &out greenThreshold, float &out yellowThreshold, float &out redThreshold) {
+    if (surfaceKind == SkidSurface::Dirt) {
+        greenThreshold = greenSkidThreshold_Dirt;
+        yellowThreshold = yellowSkidThreshold_Dirt;
+        redThreshold = redSkidThreshold_Dirt;
+        return;
+    }
+
+    if (surfaceKind == SkidSurface::Grass) {
+        greenThreshold = greenSkidThreshold_Grass;
+        yellowThreshold = yellowSkidThreshold_Grass;
+        redThreshold = redSkidThreshold_Grass;
+        return;
+    }
+
+    greenThreshold = greenSkidThreshold_Asphalt;
+    yellowThreshold = yellowSkidThreshold_Asphalt;
+    redThreshold = redSkidThreshold_Asphalt;
+}
+
+DriftTier DetermineTargetTier(float driftQualityRatio, SkidSurface surfaceKind, DriftTier currentTierForSurface) {
     if (isBoosted && !allowLiveBoostGrading) {
         return currentTierForSurface;
     }
@@ -256,34 +276,37 @@ DriftTier DetermineTargetTier(float driftQualityRatio, DriftTier currentTierForS
         return DriftTier::Default;
     }
 
+    float greenThreshold, yellowThreshold, redThreshold;
+    GetTierThresholdsForSurface(surfaceKind, greenThreshold, yellowThreshold, redThreshold);
+
     if (currentTierForSurface == DriftTier::High) {
-        if (driftQualityRatio < greenSkidThreshold - skidHysteresisDown) {
-            if (driftQualityRatio >= yellowSkidThreshold - skidHysteresisDown) return DriftTier::Mid;
-            if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
+        if (driftQualityRatio < greenThreshold - skidHysteresisDown) {
+            if (driftQualityRatio >= yellowThreshold - skidHysteresisDown) return DriftTier::Mid;
+            if (driftQualityRatio >= redThreshold) return DriftTier::Poor;
             return DriftTier::Default;
         }
         return DriftTier::High;
     }
 
     if (currentTierForSurface == DriftTier::Mid) {
-        if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
-        if (driftQualityRatio < yellowSkidThreshold - skidHysteresisDown) {
-            if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
+        if (driftQualityRatio >= greenThreshold + skidHysteresisUp) return DriftTier::High;
+        if (driftQualityRatio < yellowThreshold - skidHysteresisDown) {
+            if (driftQualityRatio >= redThreshold) return DriftTier::Poor;
             return DriftTier::Default;
         }
         return DriftTier::Mid;
     }
 
     if (currentTierForSurface == DriftTier::Poor) {
-        if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
-        if (driftQualityRatio >= yellowSkidThreshold + skidHysteresisUp) return DriftTier::Mid;
-        if (driftQualityRatio < redSkidThreshold - skidHysteresisDown) return DriftTier::Default;
+        if (driftQualityRatio >= greenThreshold + skidHysteresisUp) return DriftTier::High;
+        if (driftQualityRatio >= yellowThreshold + skidHysteresisUp) return DriftTier::Mid;
+        if (driftQualityRatio < redThreshold - skidHysteresisDown) return DriftTier::Default;
         return DriftTier::Poor;
     }
 
-    if (driftQualityRatio >= greenSkidThreshold) return DriftTier::High;
-    if (driftQualityRatio >= yellowSkidThreshold) return DriftTier::Mid;
-    if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
+    if (driftQualityRatio >= greenThreshold) return DriftTier::High;
+    if (driftQualityRatio >= yellowThreshold) return DriftTier::Mid;
+    if (driftQualityRatio >= redThreshold) return DriftTier::Poor;
     return DriftTier::Default;
 }
 
