@@ -191,9 +191,36 @@ string settingsProfileStatus = "";
 array<string> settingsProfileNames;
 array<string> settingsProfilePayloads;
 bool settingsProfilesLoaded = false;
+bool settingsProfileLoadInProgress = false;
+bool generalRebuildInProgress = false;
+string pendingSettingsProfileName = "";
+string pendingSettingsProfilePayload = "";
 
-void DrawSettingsProfilesPanel();
-void EnsureSettingsProfilesLoaded();
+void RunGeneralStartupRebuildAsync() {
+    bool rebuiltOk = BootstrapSkidRuntimeAssets();
+    if (rebuiltOk) {
+        generalActionsStatus = "Startup rebuild finished. Skids reloaded and primed.";
+    } else {
+        generalActionsStatus = "Startup rebuild completed with warnings. Check logs for missing files or staging issues.";
+    }
+    generalRebuildInProgress = false;
+}
+
+bool RequestGeneralStartupRebuild() {
+    if (generalRebuildInProgress) {
+        generalActionsStatus = "Startup rebuild already in progress.";
+        return false;
+    }
+    if (settingsProfileLoadInProgress) {
+        generalActionsStatus = "Wait for profile load to finish before rebuilding.";
+        return false;
+    }
+
+    generalRebuildInProgress = true;
+    generalActionsStatus = "Running startup rebuild...";
+    startnew(RunGeneralStartupRebuildAsync);
+    return true;
+}
 
 [SettingsTab name="General" icon="Cogs"]
 void R_S_GeneralSettingsTab() {
@@ -220,12 +247,7 @@ void R_S_GeneralSettingsTab() {
     UI::Text("Runtime rebuild");
     UI::TextWrapped("Re-runs skid checks, install/fallback download, texture list refresh, staging, and default priming like plugin startup.");
     if (UI::Button("Repopulate Skids (Startup Rebuild)")) {
-        bool rebuiltOk = BootstrapSkidRuntimeAssets();
-        if (rebuiltOk) {
-            generalActionsStatus = "Startup rebuild finished. Skids reloaded and primed.";
-        } else {
-            generalActionsStatus = "Startup rebuild completed with warnings. Check logs for missing files or staging issues.";
-        }
+        RequestGeneralStartupRebuild();
     }
 
     if (generalActionsStatus.Length > 0) {
@@ -931,18 +953,23 @@ bool RenameSelectedSettingsProfile(const string &in rawName) {
     return true;
 }
 
-bool LoadSelectedSettingsProfile() {
-    EnsureSettingsProfilesLoaded();
+void LoadSelectedSettingsProfileAsync() {
+    string profileName = pendingSettingsProfileName;
+    string payload = pendingSettingsProfilePayload;
+    pendingSettingsProfileName = "";
+    pendingSettingsProfilePayload = "";
 
-    int selectedIx = FindSettingsProfileIndexByName(S_SelectedSettingsProfile);
-    if (selectedIx < 0) {
-        settingsProfileStatus = "Select a saved profile first.";
-        return false;
+    if (payload.Length == 0) {
+        settingsProfileStatus = "No profile payload available to load.";
+        settingsProfileLoadInProgress = false;
+        return;
     }
 
-    if (!ApplySettingsProfilePayload(settingsProfilePayloads[selectedIx])) {
+    S_SelectedSettingsProfile = profileName;
+    if (!ApplySettingsProfilePayload(payload)) {
         settingsProfileStatus = "Profile is invalid or from an unsupported version.";
-        return false;
+        settingsProfileLoadInProgress = false;
+        return;
     }
 
     EnsureConfiguredSkidFilesExist();
@@ -952,7 +979,34 @@ bool LoadSelectedSettingsProfile() {
     } else {
         settingsProfileStatus = "Profile loaded with startup warnings; check logs.";
     }
-    return rebuiltOk;
+    settingsProfileLoadInProgress = false;
+}
+
+bool RequestLoadSelectedSettingsProfile() {
+    EnsureSettingsProfilesLoaded();
+
+    if (generalRebuildInProgress) {
+        settingsProfileStatus = "Startup rebuild in progress. Try loading after it finishes.";
+        return false;
+    }
+
+    if (settingsProfileLoadInProgress) {
+        settingsProfileStatus = "Profile load already in progress.";
+        return false;
+    }
+
+    int selectedIx = FindSettingsProfileIndexByName(S_SelectedSettingsProfile);
+    if (selectedIx < 0) {
+        settingsProfileStatus = "Select a saved profile first.";
+        return false;
+    }
+
+    pendingSettingsProfileName = settingsProfileNames[selectedIx];
+    pendingSettingsProfilePayload = settingsProfilePayloads[selectedIx];
+    settingsProfileLoadInProgress = true;
+    settingsProfileStatus = "Loading profile: " + pendingSettingsProfileName + "...";
+    startnew(LoadSelectedSettingsProfileAsync);
+    return true;
 }
 
 void DeleteSelectedSettingsProfile() {
@@ -990,7 +1044,15 @@ void DrawSettingsProfilesPanel() {
     if (UI::Button("Save Profile")) {
         SaveCurrentSettingsAsProfile(settingsProfileNameInput);
     }
-    DrawHelpIcon("Saving with an existing name overwrites that profile.");
+    UI::SameLine();
+    if (UI::Button("Duplicate")) {
+        DuplicateSelectedSettingsProfile(settingsProfileNameInput);
+    }
+    UI::SameLine();
+    if (UI::Button("Rename Selected Profile")) {
+        RenameSelectedSettingsProfile(settingsProfileNameInput);
+    }
+    DrawHelpIcon("Save overwrites an existing name. Duplicate creates a new profile from the selected one. Rename changes only the selected profile name.");
 
     string comboPreview = S_SelectedSettingsProfile.Length > 0 ? S_SelectedSettingsProfile : "Select profile";
     if (UI::BeginCombo("Saved Profiles", comboPreview)) {
@@ -1005,15 +1067,7 @@ void DrawSettingsProfilesPanel() {
     }
 
     if (UI::Button("Load Selected Profile")) {
-        LoadSelectedSettingsProfile();
-    }
-    UI::SameLine();
-    if (UI::Button("Duplicate To Name")) {
-        DuplicateSelectedSettingsProfile(settingsProfileNameInput);
-    }
-    UI::SameLine();
-    if (UI::Button("Rename Selected To Name")) {
-        RenameSelectedSettingsProfile(settingsProfileNameInput);
+        RequestLoadSelectedSettingsProfile();
     }
     UI::SameLine();
     if (UI::Button(Icons::TrashO + " Delete Selected Profile")) {
