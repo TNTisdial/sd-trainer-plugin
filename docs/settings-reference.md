@@ -15,6 +15,15 @@ Advanced (hidden by default):
 Runtime UI action:
 
 - `Reset Runtime Tuning Defaults`: sets all Runtime tab tuning values back to code defaults.
+- `Settings profiles`: save/load/delete named snapshots of runtime tuning + skid skin tier picks.
+
+Runtime profiles details:
+
+- Save with an existing profile name overwrites that profile.
+- `Duplicate To Name` copies the selected profile to a new name.
+- `Rename Selected To Name` renames the selected profile.
+- Loading a profile applies settings, validates selected skid files, and runs startup rebuild/staging.
+- Profile scope includes Runtime tab tuning fields and per-surface High/Mid/Poor skid file selections.
 
 Runtime UI help:
 
