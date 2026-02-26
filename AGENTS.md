@@ -11,8 +11,9 @@
   - `SkidIO.as`
   - `SkidSettings.as`
   - `DDS_IMG/`
+  - `SkidOptions/`
 - Exclude docs/repo metadata (`docs/`, `.git/`, release notes, etc.).
-rm -f "SD-Trainer-Plugin.op" "SD-Trainer-Plugin.zip" && zip -r "SD-Trainer-Plugin.zip" "info.toml" "SkidRuntime.as" "SkidPhysics.as" "SkidIO.as" "SkidSettings.as" "DDS_IMG" && mv "SD-Trainer-Plugin.zip" "SD-Trainer-Plugin.op"
+rm -f "SD-Trainer-Plugin.op" "SD-Trainer-Plugin.zip" && zip -r "SD-Trainer-Plugin.zip" "info.toml" "SkidRuntime.as" "SkidPhysics.as" "SkidIO.as" "SkidSettings.as" "DDS_IMG" "SkidOptions" && mv "SD-Trainer-Plugin.zip" "SD-Trainer-Plugin.op"
 - Verify package contents before release:
 
 ```bash
