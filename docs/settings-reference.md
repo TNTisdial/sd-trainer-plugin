@@ -1,6 +1,6 @@
 # Settings Reference
 
-All values below are current defaults from `SkidRuntime.as`.
+All values below are current defaults from `SkidSettings.as`.
 
 ## General
 
@@ -49,10 +49,10 @@ Advanced (hidden by default):
 
 - `Promotion Persistence Frames`: `4`
 - `Downgrade Persistence Frames`: `4`
-- `Landing Lockout (ms)`: `80`
+- `Landing Lockout (ms)`: `30`
 - `Min SlipCoef To Drift`: `0.150`
 - `Slip Hysteresis`: `0.020`
-- `Post-Landing Impact Guard (ms)`: `60`
+- `Post-Landing Impact Guard (ms)`: `30`
 - `Impact Spike Threshold`: `3.000`
 - `Impact Extra Promotion Frames`: `2`
 - `Post-Boost Impact Guard (ms)`: `100`

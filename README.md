@@ -35,6 +35,7 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - `docs/acceleration-logic.md` for drift-quality computation.
 - `docs/settings-reference.md` for runtime settings and defaults.
 - `docs/skid-picker-ui.md` for UI behavior and hidden persisted fields.
+- `docs/code-architecture.md` for module ownership and execution flow.
 
 ## Credit
 

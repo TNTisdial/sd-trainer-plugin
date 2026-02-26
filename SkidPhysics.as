@@ -1,3 +1,22 @@
+// Owns: acceleration/drift math, gates, and tier decisions.
+
+// --- Model Constants ---
+const int ACCEL_ARRAY_SIZE = 4;
+
+const float MIN_XZ_CHANGE_ESTIMATE = 0.01f;
+const float MIN_EFFECTIVE_DT_MS = 1.0f;
+const float GRAVITY_COMPENSATION = 29.0f;
+const float ACCEL_NOISE_FLOOR = 0.2f;
+const float MIN_ACCEL_DENOM = 0.001f;
+
+const float PERFECT_BUFFER = 0.3f;
+const float ASPHALT_BASE_MAX_ACCEL = 16.0f;
+const float ASPHALT_HIGH_SPEED_THRESHOLD_KMH = 400.0f;
+const float ASPHALT_HIGH_SPEED_BASE = 4.915f;
+const float ASPHALT_HIGH_SPEED_SLOPE = 0.003984518249f;
+const float DIRT_MAX_ACCEL = 9.39951f;
+const float GRASS_MAX_ACCEL = 9.10985f;
+
 // --- Vector Helpers ---
 float CalculateVectorMagnitude(vec3 vector1) {
     return Math::Sqrt(vector1.x * vector1.x + vector1.y * vector1.y + vector1.z * vector1.z);
@@ -99,6 +118,41 @@ float ApplyLowSpeedForgiveness(float accelMax, float speedKmh, SkidSurface surfa
     }
 
     return accelMax;
+}
+
+float ComputeDriftQualityRatio(float adjustedMaxAccelSpeedSlide) {
+    float denom = Math::Max(MIN_ACCEL_DENOM, adjustedMaxAccelSpeedSlide);
+    float numerator = slopeAdjustedAcceleration;
+
+    if (isBoosted && allowLiveBoostGrading) {
+        if (!boostBaselineReady) {
+            boostBaselineAccel = slopeAdjustedAcceleration;
+            boostBaselineReady = true;
+            dbg("[Boost] Initialized baseline accel=" + boostBaselineAccel);
+        }
+
+        numerator = slopeAdjustedAcceleration - boostBaselineAccel;
+        float headroomScale = Math::Max(0.05f, boostHeadroomScale);
+        denom = Math::Max(MIN_ACCEL_DENOM, denom * headroomScale);
+    }
+
+    float ratio = numerator / denom;
+
+    float slopeDeg = currentSlopeEstimateRad * 57.29578f;
+    float slopeNorm = Math::Clamp(slopeDeg / 10.0f, -1.0f, 1.0f);
+    if (slopeNorm > 0.0f && uphillSlopeLeniency > 0.0f) {
+        ratio += uphillSlopeLeniency * slopeNorm;
+    } else if (slopeNorm < 0.0f && downhillSlopeStrictness > 0.0f) {
+        ratio -= downhillSlopeStrictness * -slopeNorm;
+    }
+
+    if (ratio > 1.0f) {
+        return 1.0f;
+    }
+    if (ratio < -1.0f) {
+        return -1.0f;
+    }
+    return ratio;
 }
 
 int TierRank(DriftTier tier) {
