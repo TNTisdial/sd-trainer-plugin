@@ -26,6 +26,28 @@ void EnsureDir(const string &in path) {
     }
 }
 
+const string kDefaultSkidTexture = "Default.dds";
+array<string> kLiveFilenameBySurface = {
+    "CarAsphaltMarks.dds",
+    "DirtMarks.dds",
+    "CarGrassMarks.dds"
+};
+
+bool DeleteFileIfExists(const string &in filePath) {
+    if (!IO::FileExists(filePath)) return true;
+    IO::Delete(filePath);
+    return !IO::FileExists(filePath);
+}
+
+void EnsureModWorkPaths() {
+    if (MODWORK_FOLDER == "") {
+        MODWORK_FOLDER = IO::FromUserGameFolder("Skins/Stadium/ModWork").Replace("\\", "/");
+    }
+    if (MODWORK_CARFX_FOLDER == "") {
+        MODWORK_CARFX_FOLDER = MODWORK_FOLDER + "/CarFxImage";
+    }
+}
+
 void RefreshGameTextures() {
     try {
         auto app = cast<CTrackMania>(GetApp());
@@ -41,27 +63,58 @@ void RefreshGameTextures() {
 
 // --- Path and Surface Mapping ---
 // TODO: Get Vistas working too
-string SourceDirForSurface(SkidSurface surfaceKind) {
-    if (surfaceKind == SkidSurface::Dirt) return SKIDS_SOURCE_DIR_DIRT;
-    if (surfaceKind == SkidSurface::Grass) return SKIDS_SOURCE_DIR_GRASS;
+bool IsValidSurfaceIndex(int index) {
+    return index >= 0 && index < int(liveTextureBySurface.Length);
+}
+
+bool IsValidLiveFilenameIndex(int index) {
+    return index >= 0 && index < int(kLiveFilenameBySurface.Length);
+}
+
+int SurfaceIndex(SkidSurface surfaceKind) {
+    if (surfaceKind == SkidSurface::Dirt) return 1;
+    if (surfaceKind == SkidSurface::Grass) return 2;
+    return 0;
+}
+
+string SourceDirForSurfaceIndex(int index) {
+    if (index == 1) return SKIDS_SOURCE_DIR_DIRT;
+    if (index == 2) return SKIDS_SOURCE_DIR_GRASS;
     return SKIDS_SOURCE_DIR_ASPHALT;
 }
 
-array<string>@ TextureListForSurface(SkidSurface surfaceKind) {
-    if (surfaceKind == SkidSurface::Dirt) return skidTexturesDirt;
-    if (surfaceKind == SkidSurface::Grass) return skidTexturesGrass;
+array<string>@ TextureListForSurfaceIndex(int index) {
+    if (index == 1) return skidTexturesDirt;
+    if (index == 2) return skidTexturesGrass;
     return skidTexturesAsphalt;
 }
 
+string SurfaceToLiveFilenameIndex(int index) {
+    if (!IsValidLiveFilenameIndex(index)) {
+        return kLiveFilenameBySurface[0];
+    }
+    return kLiveFilenameBySurface[index];
+}
+
+string SurfaceToLiveFolderIndex(int index) {
+    if (index == 1) return MODWORK_FOLDER;
+    return MODWORK_CARFX_FOLDER;
+}
+
+string SourceDirForSurface(SkidSurface surfaceKind) {
+    return SourceDirForSurfaceIndex(SurfaceIndex(surfaceKind));
+}
+
+array<string>@ TextureListForSurface(SkidSurface surfaceKind) {
+    return TextureListForSurfaceIndex(SurfaceIndex(surfaceKind));
+}
+
 string SurfaceToLiveFilename(SkidSurface surfaceKind) {
-    if (surfaceKind == SkidSurface::Dirt) return "DirtMarks.dds";
-    if (surfaceKind == SkidSurface::Grass) return "CarGrassMarks.dds";
-    return "CarAsphaltMarks.dds";
+    return SurfaceToLiveFilenameIndex(SurfaceIndex(surfaceKind));
 }
 
 string SurfaceToLiveFolder(SkidSurface surfaceKind) {
-    if (surfaceKind == SkidSurface::Dirt) return MODWORK_FOLDER;
-    return MODWORK_CARFX_FOLDER;
+    return SurfaceToLiveFolderIndex(SurfaceIndex(surfaceKind));
 }
 
 string LivePath(SkidSurface surfaceKind) {
@@ -77,39 +130,33 @@ string TierToFilenameForSurface(DriftTier tier, SkidSurface surfaceKind) {
         if (tier == DriftTier::High) return S_DirtHighSkidFile;
         if (tier == DriftTier::Mid) return S_DirtMidSkidFile;
         if (tier == DriftTier::Poor) return S_DirtPoorSkidFile;
-        return "Default.dds";
+        return kDefaultSkidTexture;
     }
 
     if (surfaceKind == SkidSurface::Grass) {
         if (tier == DriftTier::High) return S_GrassHighSkidFile;
         if (tier == DriftTier::Mid) return S_GrassMidSkidFile;
         if (tier == DriftTier::Poor) return S_GrassPoorSkidFile;
-        return "Default.dds";
+        return kDefaultSkidTexture;
     }
 
     if (tier == DriftTier::High) return S_AsphaltHighSkidFile;
     if (tier == DriftTier::Mid) return S_AsphaltMidSkidFile;
     if (tier == DriftTier::Poor) return S_AsphaltPoorSkidFile;
-    return "Default.dds";
-}
-
-int SurfaceIndex(SkidSurface surfaceKind) {
-    if (surfaceKind == SkidSurface::Dirt) return 1;
-    if (surfaceKind == SkidSurface::Grass) return 2;
-    return 0;
+    return kDefaultSkidTexture;
 }
 
 string TrackedLiveFilename(SkidSurface surfaceKind) {
     int index = SurfaceIndex(surfaceKind);
-    if (index < 0 || index >= int(liveTextureBySurface.Length)) {
-        return "Default.dds";
+    if (!IsValidSurfaceIndex(index)) {
+        return kDefaultSkidTexture;
     }
     return liveTextureBySurface[index];
 }
 
 void SetTrackedLiveFilename(SkidSurface surfaceKind, const string &in filename) {
     int index = SurfaceIndex(surfaceKind);
-    if (index < 0 || index >= int(liveTextureBySurface.Length)) {
+    if (!IsValidSurfaceIndex(index)) {
         return;
     }
     liveTextureBySurface[index] = filename;
@@ -143,7 +190,25 @@ int TotalLoadedSkidTextures() {
 }
 
 // --- Staging and Priming ---
-// PITA 
+void BuildFilesToStageForSurface(SkidSurface surfaceKind, array<string> &out filesToStage) {
+    filesToStage.RemoveRange(0, filesToStage.Length);
+    filesToStage.InsertLast(kDefaultSkidTexture);
+
+    string highFile = TierToFilenameForSurface(DriftTier::High, surfaceKind);
+    string midFile = TierToFilenameForSurface(DriftTier::Mid, surfaceKind);
+    string poorFile = TierToFilenameForSurface(DriftTier::Poor, surfaceKind);
+
+    if (filesToStage.Find(highFile) < 0) filesToStage.InsertLast(highFile);
+    if (filesToStage.Find(midFile) < 0) filesToStage.InsertLast(midFile);
+    if (filesToStage.Find(poorFile) < 0) filesToStage.InsertLast(poorFile);
+}
+
+bool RebuildStagedTexture(SkidSurface surfaceKind, const string &in filename) {
+    string dstAbs = StagedPath(surfaceKind, filename);
+    DeleteFileIfExists(dstAbs);
+    return EnsureStagedTexture(surfaceKind, filename);
+}
+
 bool EnsureStagedTexture(SkidSurface surfaceKind, const string &in filename) {
     string stagedPath = StagedPath(surfaceKind, filename);
     if (IO::FileExists(stagedPath)) return true;
@@ -165,23 +230,12 @@ bool EnsureStagedTexture(SkidSurface surfaceKind, const string &in filename) {
 
 bool StageRequiredTexturesForSurface(SkidSurface surfaceKind) {
     array<string> filesToStage;
-    filesToStage.InsertLast("Default.dds");
-
-    string highFile = TierToFilenameForSurface(DriftTier::High, surfaceKind);
-    string midFile = TierToFilenameForSurface(DriftTier::Mid, surfaceKind);
-    string poorFile = TierToFilenameForSurface(DriftTier::Poor, surfaceKind);
-    if (filesToStage.Find(highFile) < 0) filesToStage.InsertLast(highFile);
-    if (filesToStage.Find(midFile) < 0) filesToStage.InsertLast(midFile);
-    if (filesToStage.Find(poorFile) < 0) filesToStage.InsertLast(poorFile);
+    BuildFilesToStageForSurface(surfaceKind, filesToStage);
 
     bool stagedOk = true;
     for (uint t = 0; t < filesToStage.Length; t++) {
         yield();
-        string dstAbs = StagedPath(surfaceKind, filesToStage[t]);
-        if (IO::FileExists(dstAbs)) {
-            IO::Delete(dstAbs);
-        }
-        if (!EnsureStagedTexture(surfaceKind, filesToStage[t])) {
+        if (!RebuildStagedTexture(surfaceKind, filesToStage[t])) {
             stagedOk = false;
             warn("[Init] Failed to stage: " + SurfaceId(surfaceKind) + "/" + filesToStage[t]);
         }
@@ -205,30 +259,80 @@ bool PrimeLiveDefaultsForAllSurfaces() {
     for (uint i = 0; i < kSurfaces.Length; i++) {
         SkidSurface surfaceKind = kSurfaces[i];
         string livePath = LivePath(surfaceKind);
-        if (IO::FileExists(livePath)) {
-            IO::Delete(livePath);
-        }
+        DeleteFileIfExists(livePath);
 
-        if (!EnsureStagedTexture(surfaceKind, "Default.dds")
-            || !CopyFileAbs(StagedPath(surfaceKind, "Default.dds"), livePath)) {
+        if (!EnsureStagedTexture(surfaceKind, kDefaultSkidTexture)
+            || !CopyFileAbs(StagedPath(surfaceKind, kDefaultSkidTexture), livePath)) {
             allPrimed = false;
             warn("[Init] Failed to prime live slot for " + SurfaceId(surfaceKind));
         } else {
-            SetTrackedLiveFilename(surfaceKind, "Default.dds");
+            SetTrackedLiveFilename(surfaceKind, kDefaultSkidTexture);
         }
     }
     return allPrimed;
 }
 
 // --- Live Swapping --- 
-// We use IO::Move instead of IO::Copy so we are not writing to disk every swap. 
-// This is a bit of a hack, however it is the only way I could find to get the game to 
-// recognize the new texture without restarting the map. 
+// We use IO::Move instead of IO::Copy to avoid writing every swap,
+// and to force the game to notice the live texture update.
+
+bool RePromoteTrackedLiveTextureIfMissing(
+    SkidSurface surfaceKind,
+    const string &in trackedFile,
+    const string &in livePath,
+    const string &in targetStagedPath
+) {
+    if (IO::FileExists(livePath)) {
+        return true;
+    }
+
+    if (!EnsureStagedTexture(surfaceKind, trackedFile)) {
+        return false;
+    }
+
+    IO::Move(targetStagedPath, livePath);
+    if (!IO::FileExists(livePath)) {
+        warn("[IO ERROR] Failed to re-promote missing live texture: " + livePath);
+        return false;
+    }
+
+    SetTrackedLiveFilename(surfaceKind, trackedFile);
+    dbg("[IO] Re-promoted tracked live texture: " + SurfaceId(surfaceKind) + " (" + trackedFile + ")");
+    return true;
+}
+
+bool TryStashCurrentLiveTexture(const string &in livePath, const string &in sourceStagedPath) {
+    DeleteFileIfExists(sourceStagedPath);
+    IO::Move(livePath, sourceStagedPath);
+    if (IO::FileExists(livePath)) {
+        warn("[IO ERROR] Failed to stash live texture: " + livePath);
+        return false;
+    }
+    return true;
+}
+
+void TryRestorePreviousLiveTexture(
+    SkidSurface surfaceKind,
+    const string &in fromFile,
+    const string &in sourceStagedPath,
+    const string &in livePath
+) {
+    if (!IO::FileExists(sourceStagedPath)) {
+        return;
+    }
+
+    IO::Move(sourceStagedPath, livePath);
+    if (IO::FileExists(livePath)) {
+        SetTrackedLiveFilename(surfaceKind, fromFile);
+        warn("[IO] Restored previous live texture after failed promote: " + SurfaceId(surfaceKind)
+            + " (" + fromFile + ")");
+    }
+}
 
 bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
     string fromFile = TrackedLiveFilename(surfaceKind);
     if (fromFile.Length == 0) {
-        fromFile = "Default.dds";
+        fromFile = kDefaultSkidTexture;
     }
     string toFile = TierToFilenameForSurface(toTier, surfaceKind);
     string livePath = LivePath(surfaceKind);
@@ -236,23 +340,7 @@ bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
     string targetStagedPath = StagedPath(surfaceKind, toFile);
 
     if (fromFile == toFile) {
-        if (IO::FileExists(livePath)) {
-            return true;
-        }
-
-        if (!EnsureStagedTexture(surfaceKind, toFile)) {
-            return false;
-        }
-
-        IO::Move(targetStagedPath, livePath);
-        if (!IO::FileExists(livePath)) {
-            warn("[IO ERROR] Failed to re-promote missing live texture: " + livePath);
-            return false;
-        }
-
-        SetTrackedLiveFilename(surfaceKind, toFile);
-        dbg("[IO] Re-promoted tracked live texture: " + SurfaceId(surfaceKind) + " (" + toFile + ")");
-        return true;
+        return RePromoteTrackedLiveTextureIfMissing(surfaceKind, toFile, livePath, targetStagedPath);
     }
 
     if (!EnsureStagedTexture(surfaceKind, toFile)) {
@@ -262,13 +350,7 @@ bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
     bool hadLive = IO::FileExists(livePath);
 
     if (hadLive) {
-        if (IO::FileExists(sourceStagedPath)) {
-            IO::Delete(sourceStagedPath);
-        }
-
-        IO::Move(livePath, sourceStagedPath);
-        if (IO::FileExists(livePath)) {
-            warn("[IO ERROR] Failed to stash live texture: " + livePath);
+        if (!TryStashCurrentLiveTexture(livePath, sourceStagedPath)) {
             return false;
         }
     }
@@ -276,13 +358,8 @@ bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
     IO::Move(targetStagedPath, livePath);
     if (!IO::FileExists(livePath)) {
         warn("[IO ERROR] Failed to promote texture to live path: " + livePath);
-        if (hadLive && IO::FileExists(sourceStagedPath)) {
-            IO::Move(sourceStagedPath, livePath);
-            if (IO::FileExists(livePath)) {
-                SetTrackedLiveFilename(surfaceKind, fromFile);
-                warn("[IO] Restored previous live texture after failed promote: " + SurfaceId(surfaceKind)
-                    + " (" + fromFile + ")");
-            }
+        if (hadLive) {
+            TryRestorePreviousLiveTexture(surfaceKind, fromFile, sourceStagedPath, livePath);
         }
         return false;
     }
@@ -313,8 +390,8 @@ bool SwapSkidTextureAllSurfaces(DriftTier targetTier, bool &out anyChanged) {
 }
 
 // --- Bundled Install ---
-// These .dds skids were created to make them easier to see in peripheral vision. 
-// Right now, we download from the github automatically, to save on packagee size. 
+// These .dds skids are tuned for visibility in peripheral vision.
+// If packaged assets are unavailable, we fetch missing files from GitHub.
 bool HasBundledSkidsAtRoot(const string &in root) {
     if (!IO::FolderExists(root)) return false;
     return IO::FolderExists(root + "/Asphalt")
@@ -325,7 +402,7 @@ bool HasBundledSkidsAtRoot(const string &in root) {
 const string REMOTE_SKIDS_TAG = "v1.0.2";
 const string REMOTE_SKIDS_BASE_URL = "https://raw.githubusercontent.com/TNTisdial/sd-trainer-plugin/" + REMOTE_SKIDS_TAG + "/SkidOptions";
 array<string> kRemoteBundledSkidFiles = {
-    "Default.dds",
+    kDefaultSkidTexture,
     "BlueFadeThicc.dds",
     "GreenFadeThicc.dds",
     "YellowFadeThicc.dds",
@@ -340,6 +417,91 @@ bool TrySetBundledSkidsRoot(const string &in candidateRoot, const string &in sou
     return true;
 }
 
+bool TryResolveFromSourcePath(const string &in sourcePath) {
+    if (sourcePath.Length == 0) return false;
+
+    if (TrySetBundledSkidsRoot(sourcePath + "/SkidOptions", "plugin source path")) {
+        return true;
+    }
+
+    if (sourcePath.ToLower().EndsWith(".op")) {
+        string withoutExt = sourcePath.SubStr(0, sourcePath.Length - 3);
+        if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugin source sibling folder")) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TryResolveFromPreferredPluginEntry(const string &in entryPath) {
+    if (IO::FolderExists(entryPath) && IO::FileExists(entryPath + "/SkidRuntime.as")) {
+        if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder preferred scan")) {
+            return true;
+        }
+    }
+
+    if (entryPath.ToLower().EndsWith(".op")) {
+        if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op mount")) {
+            return true;
+        }
+
+        string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
+        if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op sibling folder")) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TryResolveFromFallbackPluginEntry(const string &in entryPath) {
+    if (IO::FolderExists(entryPath)) {
+        if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder fallback scan")) {
+            return true;
+        }
+    }
+
+    if (entryPath.ToLower().EndsWith(".op")) {
+        if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op fallback mount")) {
+            return true;
+        }
+
+        string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
+        if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op fallback sibling folder")) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TryResolveFromPluginsDirectory() {
+    string pluginsDir = IO::FromDataFolder("Plugins").Replace("\\", "/");
+    if (!IO::FolderExists(pluginsDir)) {
+        return false;
+    }
+
+    auto entries = IO::IndexFolder(pluginsDir, false);
+    entries.SortAsc();
+
+    for (uint i = 0; i < entries.Length; i++) {
+        string entryPath = entries[i].Replace("\\", "/");
+        if (TryResolveFromPreferredPluginEntry(entryPath)) {
+            return true;
+        }
+    }
+
+    for (uint i = 0; i < entries.Length; i++) {
+        string entryPath = entries[i].Replace("\\", "/");
+        if (TryResolveFromFallbackPluginEntry(entryPath)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 string ResolveBundledSkidsRoot() {
     if (bundledSkidsRoot.Length > 0 && HasBundledSkidsAtRoot(bundledSkidsRoot)) {
         return bundledSkidsRoot;
@@ -348,72 +510,25 @@ string ResolveBundledSkidsRoot() {
     auto plugin = Meta::ExecutingPlugin();
     if (plugin !is null) {
         string sourcePath = plugin.SourcePath.Replace("\\", "/");
-        if (sourcePath.Length > 0) {
-            if (TrySetBundledSkidsRoot(sourcePath + "/SkidOptions", "plugin source path")) {
-                return bundledSkidsRoot;
-            }
-
-            if (sourcePath.ToLower().EndsWith(".op")) {
-                string withoutExt = sourcePath.SubStr(0, sourcePath.Length - 3);
-                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugin source sibling folder")) {
-                    return bundledSkidsRoot;
-                }
-            }
+        if (TryResolveFromSourcePath(sourcePath)) {
+            return bundledSkidsRoot;
         }
     }
-// Here we look in the plugins folder for any plugins that have skid options aka Modless-Skids
-    string pluginsDir = IO::FromDataFolder("Plugins").Replace("\\", "/");
-    if (IO::FolderExists(pluginsDir)) {
-        auto entries = IO::IndexFolder(pluginsDir, false);
-        entries.SortAsc();
 
-        for (uint i = 0; i < entries.Length; i++) {
-            string entryPath = entries[i].Replace("\\", "/");
-
-            if (IO::FolderExists(entryPath) && IO::FileExists(entryPath + "/SkidRuntime.as")) {
-                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder preferred scan")) {
-                    return bundledSkidsRoot;
-                }
-            }
-
-            if (entryPath.ToLower().EndsWith(".op")) {
-                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op mount")) {
-                    return bundledSkidsRoot;
-                }
-
-                string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
-                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op sibling folder")) {
-                    return bundledSkidsRoot;
-                }
-            }
-        }
-
-        for (uint i = 0; i < entries.Length; i++) {
-            string entryPath = entries[i].Replace("\\", "/");
-            if (IO::FolderExists(entryPath)) {
-                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder fallback scan")) {
-                    return bundledSkidsRoot;
-                }
-            }
-
-            if (entryPath.ToLower().EndsWith(".op")) {
-                if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins .op fallback mount")) {
-                    return bundledSkidsRoot;
-                }
-
-                string withoutExt = entryPath.SubStr(0, entryPath.Length - 3);
-                if (TrySetBundledSkidsRoot(withoutExt + "/SkidOptions", "plugins .op fallback sibling folder")) {
-                    return bundledSkidsRoot;
-                }
-            }
-        }
+    if (TryResolveFromPluginsDirectory()) {
+        return bundledSkidsRoot;
     }
 
     return "";
 }
-// .op file wont come with a skidoptions folder, so we need to download it from the github.
+
+string UserSkidsDirForSurfaceName(const string &in surfaceName) {
+    return IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName).Replace("\\", "/");
+}
+
+// .op packages may not include SkidOptions at runtime, so we fetch missing files remotely.
 bool DownloadBundledSkidFile(const string &in surfaceName, const string &in filename) {
-    string destDir = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName).Replace("\\", "/");
+    string destDir = UserSkidsDirForSurfaceName(surfaceName);
     EnsureDir(destDir);
 
     string destPath = destDir + "/" + filename;
@@ -458,7 +573,7 @@ bool DownloadBundledSkidsFromRemote() {
         string surfaceName = SurfaceFolderName(kSurfaces[i]);
         for (uint f = 0; f < kRemoteBundledSkidFiles.Length; f++) {
             string filename = kRemoteBundledSkidFiles[f];
-            string destPath = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName + "/" + filename).Replace("\\", "/");
+            string destPath = UserSkidsDirForSurfaceName(surfaceName) + "/" + filename;
             if (IO::FileExists(destPath)) {
                 skipped++;
                 continue;
@@ -490,7 +605,7 @@ void InstallBundledSkidsForSurface(SkidSurface surfaceKind) {
         return;
     }
 
-    string destDir = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName).Replace("\\", "/");
+    string destDir = UserSkidsDirForSurfaceName(surfaceName);
     EnsureDir(destDir);
 
     auto files = IO::IndexFolder(pluginSkidsDir, false);
@@ -510,8 +625,8 @@ void InstallBundledSkidsForSurface(SkidSurface surfaceKind) {
         string filename = parts[parts.Length - 1];
         string destFile = destDir + "/" + filename;
 
-        if (filename == "Default.dds" && IO::FileExists(destFile)) {
-            IO::Delete(destFile);
+        if (filename == kDefaultSkidTexture && IO::FileExists(destFile)) {
+            DeleteFileIfExists(destFile);
         }
 
         if (IO::FileExists(destFile)) {
@@ -545,12 +660,7 @@ void InstallBundledSkids() {
 // --- Cleanup Entrypoints ---
 
 bool DeleteModWorkFolderForModlessHandoff() {
-    if (MODWORK_FOLDER == "") {
-        MODWORK_FOLDER = IO::FromUserGameFolder("Skins/Stadium/ModWork").Replace("\\", "/");
-    }
-    if (MODWORK_CARFX_FOLDER == "") {
-        MODWORK_CARFX_FOLDER = MODWORK_FOLDER + "/CarFxImage";
-    }
+    EnsureModWorkPaths();
 
     if (!IO::FolderExists(MODWORK_FOLDER)) {
         warn("[Modless Handoff] ModWork folder not found; nothing to delete.");
@@ -580,33 +690,26 @@ bool DeleteModWorkFolderForModlessHandoff() {
 }
 
 void CleanupModWork() {
-    if (MODWORK_FOLDER == "") {
-        MODWORK_FOLDER = IO::FromUserGameFolder("Skins/Stadium/ModWork").Replace("\\", "/");
-    }
-    if (MODWORK_CARFX_FOLDER == "") {
-        MODWORK_CARFX_FOLDER = MODWORK_FOLDER + "/CarFxImage";
-    }
+    EnsureModWorkPaths();
 
     for (uint i = 0; i < kSurfaces.Length; i++) {
         SkidSurface surfaceKind = kSurfaces[i];
 
         string live = LivePath(surfaceKind);
-        if (IO::FileExists(live)) {
-            IO::Delete(live);
-        }
+        DeleteFileIfExists(live);
 
         array<string>@ texList = TextureListForSurface(surfaceKind);
         for (uint t = 0; t < texList.Length; t++) {
             string staged = StagedPath(surfaceKind, texList[t]);
             if (IO::FileExists(staged)) {
-                IO::Delete(staged);
+                DeleteFileIfExists(staged);
                 dbg("[Cleanup] Deleted staged file: " + staged);
             }
         }
 
-        string defaultStaged = StagedPath(surfaceKind, "Default.dds");
+        string defaultStaged = StagedPath(surfaceKind, kDefaultSkidTexture);
         if (IO::FileExists(defaultStaged)) {
-            IO::Delete(defaultStaged);
+            DeleteFileIfExists(defaultStaged);
         }
     }
 

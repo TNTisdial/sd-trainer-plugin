@@ -171,8 +171,7 @@ DriftTier ApplyLandingLockoutGate(DriftTier candidateTier, SkidSurface surfaceKi
     if (Time::Now >= landingLockoutUntilMs) {
         return candidateTier;
     }
-// More code to make appearance nicer. 
-// This plugin aint for pros 
+    // Smoothing guard to reduce noisy visual upgrades right after landing.
     if (TierRank(candidateTier) > TierRank(currentTierForSurface)) {
         dbg("[Gate] Landing lockout blocked upgrade: surface=" + SurfaceId(surfaceKind)
             + " " + TierName(currentTierForSurface) + " -> " + TierName(candidateTier)
@@ -182,7 +181,7 @@ DriftTier ApplyLandingLockoutGate(DriftTier candidateTier, SkidSurface surfaceKi
 
     return candidateTier;
 }
-// This is to prevent the tier from changing too rapidly, when effects are applied, downhill or landing
+// Prevent rapid tier oscillation when short-lived spikes occur.
 DriftTier ApplyTierPersistenceGate(DriftTier candidateTier, SkidSurface surfaceKind, DriftTier currentTierForSurface) {
     DriftTier pendingTier = PendingTierForSurface(surfaceKind);
     int pendingTierFrames = PendingTierFramesForSurface(surfaceKind);

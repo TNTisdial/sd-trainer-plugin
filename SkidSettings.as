@@ -14,22 +14,22 @@ bool debugLogging = false;
 bool showAdvancedSettings = false;
 
 // --- Runtime Tuning Settings ---
-[Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min="50" max="2000" drag="true"]
-uint64 swapDebounceMs = 260;
+[Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min=50 max=2000 drag]
+uint swapDebounceMs = 260;
 
-[Setting hidden name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min="0.50" max="1.00" drag="true"]
+[Setting hidden name="Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
 float greenSkidThreshold = 0.910f;
 
-[Setting hidden name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min="0.30" max="0.99" drag="true"]
+[Setting hidden name="Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
 float yellowSkidThreshold = 0.70f;
 
-[Setting hidden name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min="0.0" max="0.70" drag="true"]
+[Setting hidden name="Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
 float redSkidThreshold = 0.10f;
 
-[Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min="0.0" max="0.15" drag="true"]
+[Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min=0.0 max=0.15 drag]
 float skidHysteresisUp = 0.015f;
 
-[Setting hidden name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min="0.0" max="0.15" drag="true"]
+[Setting hidden name="Downgrade Hysteresis" description="Buffer for downgrading color (e.g. green->yellow, yellow->red). Lower = faster downgrade." min=0.0 max=0.15 drag]
 float skidHysteresisDown = 0.015f;
 
 [Setting hidden name="Promotion Persistence Frames" description="Frames required before upgrading skid tier. 0 disables persistence."]
@@ -47,7 +47,7 @@ int surfaceTransitionGraceMs = 100;
 [Setting hidden name="Landing Lockout (ms)" description="Block tier upgrades briefly after landing. 0 disables lockout."]
 int landingLockoutMs = 30;
 
-[Setting hidden name="Min SlipCoef To Drift" description="Minimum FLSlipCoef required to count as drifting. 0 keeps current behavior." min="0.00" max="0.30" drag="true"]
+[Setting hidden name="Min SlipCoef To Drift" description="Minimum FLSlipCoef required to count as drifting. 0 keeps current behavior." min=0.00 max=0.30 drag]
 float minSlipCoefToDrift = 0.150f;
 
 [Setting hidden name="Slip Hysteresis" description="Extra FLSlipCoef margin to stop drifting. Exit threshold = Min SlipCoef To Drift - Slip Hysteresis. 0 disables."]
@@ -89,37 +89,37 @@ float downhillSlopeStrictness = 0.050f;
 [Setting hidden name="Low Speed Forgiveness" description="Relax skid quality criteria at lower speeds where physics make speed gains harder."]
 bool lowSpeedForgivenessEnabled = true;
 
-[Setting hidden name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min="500" max="900" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on asphalt." min=500 max=900 drag]
 float forgivenessMaxSpeed_Asphalt = 550.0f;
 
-[Setting hidden name="Asphalt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on asphalt." min="400" max="600" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on asphalt." min=400 max=600 drag]
 float forgivenessMinSpeed_Asphalt = 400.0f;
 
-[Setting hidden name="Asphalt Forgiveness Factor" description="Multiplier at minimum speed on asphalt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Asphalt Forgiveness Factor" description="Multiplier at minimum speed on asphalt. Lower = more forgiving." min=0.60 max=1.00 drag]
 float forgivenessFactor_Asphalt = 0.90f;
 
-[Setting hidden name="Dirt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on dirt." min="100" max="500" drag="true"]
+[Setting hidden name="Dirt Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on dirt." min=100 max=500 drag]
 float forgivenessMaxSpeed_Dirt = 300.0f;
 
-[Setting hidden name="Dirt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on dirt." min="50" max="300" drag="true"]
+[Setting hidden name="Dirt Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on dirt." min=50 max=300 drag]
 float forgivenessMinSpeed_Dirt = 150.0f;
 
-[Setting hidden name="Dirt Forgiveness Factor" description="Multiplier at minimum speed on dirt. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Dirt Forgiveness Factor" description="Multiplier at minimum speed on dirt. Lower = more forgiving." min=0.60 max=1.00 drag]
 float forgivenessFactor_Dirt = 0.90f;
 
-[Setting hidden name="Grass Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on grass." min="100" max="500" drag="true"]
+[Setting hidden name="Grass Forgiveness Max Speed" description="Speed (km/h) above which no forgiveness is applied on grass." min=100 max=500 drag]
 float forgivenessMaxSpeed_Grass = 300.0f;
 
-[Setting hidden name="Grass Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on grass." min="50" max="300" drag="true"]
+[Setting hidden name="Grass Forgiveness Min Speed" description="Speed (km/h) at which maximum forgiveness is applied on grass." min=50 max=300 drag]
 float forgivenessMinSpeed_Grass = 150.0f;
 
-[Setting hidden name="Grass Forgiveness Factor" description="Multiplier at minimum speed on grass. Lower = more forgiving." min="0.60" max="1.00" drag="true"]
+[Setting hidden name="Grass Forgiveness Factor" description="Multiplier at minimum speed on grass. Lower = more forgiving." min=0.60 max=1.00 drag]
 float forgivenessFactor_Grass = 0.90f;
 
 // --- Settings Change Tracking State ---
 bool _prev_pluginEnabled = true;
 bool _prev_useSlopeAdjustedAcc = true;
-uint64 _prev_swapDebounceMs = 225;
+uint _prev_swapDebounceMs = 225;
 float _prev_greenSkidThreshold = 0.93f;
 float _prev_yellowSkidThreshold = 0.70f;
 float _prev_redSkidThreshold = 0.10f;
@@ -280,7 +280,7 @@ void R_S_RuntimeSettingsTab() {
     int newSwapDebounceInt = UI::SliderInt("Swap Debounce (ms)", swapDebounceInt, 50, 2000);
     DrawHelpIcon("Minimum time between skid texture swaps. Higher values reduce flicker but add response delay.");
     if (newSwapDebounceInt != swapDebounceInt) {
-        swapDebounceMs = uint64(newSwapDebounceInt);
+        swapDebounceMs = uint(newSwapDebounceInt);
     }
 
     UI::Separator();
@@ -364,7 +364,7 @@ bool TrackSettingChangeBool(const string &in label, bool current, bool previous)
     return true;
 }
 
-bool TrackSettingChangeUint64(const string &in label, uint64 current, uint64 previous) {
+bool TrackSettingChangeUint(const string &in label, uint current, uint previous) {
     if (current == previous) return false;
     trace("[Settings] " + label + ": " + previous + " -> " + current);
     return true;
@@ -382,12 +382,12 @@ bool TrackSettingChangeInt(const string &in label, int current, int previous) {
     return true;
 }
 
-// Makes it easier to see what the hell is happening when debugging
+// Tracks setting changes in debug logs for easier tuning diagnostics.
 void OnSettingsChanged() {
     if (!debugLogging) return;
     if (TrackSettingChangeBool("Enable Plugin", pluginEnabled, _prev_pluginEnabled)) _prev_pluginEnabled = pluginEnabled;
     if (TrackSettingChangeBool("Gravity Adjustment", useSlopeAdjustedAcc, _prev_useSlopeAdjustedAcc)) _prev_useSlopeAdjustedAcc = useSlopeAdjustedAcc;
-    if (TrackSettingChangeUint64("Swap Debounce (ms)", swapDebounceMs, _prev_swapDebounceMs)) _prev_swapDebounceMs = swapDebounceMs;
+    if (TrackSettingChangeUint("Swap Debounce (ms)", swapDebounceMs, _prev_swapDebounceMs)) _prev_swapDebounceMs = swapDebounceMs;
     if (TrackSettingChangeFloat("Green Threshold", greenSkidThreshold, _prev_greenSkidThreshold)) _prev_greenSkidThreshold = greenSkidThreshold;
     if (TrackSettingChangeFloat("Yellow Threshold", yellowSkidThreshold, _prev_yellowSkidThreshold)) _prev_yellowSkidThreshold = yellowSkidThreshold;
     if (TrackSettingChangeFloat("Red Threshold", redSkidThreshold, _prev_redSkidThreshold)) _prev_redSkidThreshold = redSkidThreshold;
@@ -432,11 +432,11 @@ string S_AsphaltMidSkidFile = "YellowFadeThicc.dds";
 string S_AsphaltPoorSkidFile = "RedFadeThicc.dds";
 
 [Setting hidden]
-string S_DirtHighSkidFile = "BlueDirtFadeThicc.dds";
+string S_DirtHighSkidFile = "BlueFadeThicc.dds";
 [Setting hidden]
-string S_DirtMidSkidFile = "YellowDirtFadeThicc.dds";
+string S_DirtMidSkidFile = "YellowFadeThicc.dds";
 [Setting hidden]
-string S_DirtPoorSkidFile = "RedDirtFadeThicc.dds";
+string S_DirtPoorSkidFile = "RedFadeThicc.dds";
 
 [Setting hidden]
 string S_GrassHighSkidFile = "BlueFadeThicc.dds";
@@ -446,7 +446,7 @@ string S_GrassMidSkidFile = "YellowFadeThicc.dds";
 string S_GrassPoorSkidFile = "RedFadeThicc.dds";
 
 [Setting hidden]
-bool S_ShowSkidPicker = true;
+bool S_ShowSkidPicker = false;
 
 // --- Skid Picker Runtime State ---
 array<string> skidOptionFiles_Asphalt;
@@ -724,9 +724,9 @@ void EnsureConfiguredSkidFilesExist() {
     string oldDirtHigh = S_DirtHighSkidFile;
     string oldDirtMid = S_DirtMidSkidFile;
     string oldDirtPoor = S_DirtPoorSkidFile;
-    S_DirtHighSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtHighSkidFile, "BlueDirtFadeThicc.dds");
-    S_DirtMidSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtMidSkidFile, "YellowDirtFadeThicc.dds");
-    S_DirtPoorSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtPoorSkidFile, "RedDirtFadeThicc.dds");
+    S_DirtHighSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtHighSkidFile, "BlueFadeThicc.dds");
+    S_DirtMidSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtMidSkidFile, "YellowFadeThicc.dds");
+    S_DirtPoorSkidFile = ResolveConfiguredSkidFile(skidOptionFiles_Dirt, S_DirtPoorSkidFile, "RedFadeThicc.dds");
     if (oldDirtHigh != S_DirtHighSkidFile || oldDirtMid != S_DirtMidSkidFile || oldDirtPoor != S_DirtPoorSkidFile) {
         warn("[SkidSettings] Dirt selection auto-corrected to available files.");
     }
