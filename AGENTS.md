@@ -1,23 +1,22 @@
-# AngelScript Rule
+# Rules
 
-- Do not use `&inout` with primitive types (`bool`, `int`, `uint64`, `float`, etc.); use `&in`/`&out` or return a value instead.
+- AngelScript: never use `&inout` with primitives (`bool`, `int`, `uint64`, `float`, etc.); use `&in`/`&out` or return values.
 
-# Openplanet Package Build
+# Build `.op` Package
 
-- Build the plugin package as a zip archive, then rename it to `.op`.
-- Include only runtime payload files and folders needed by Openplanet:
+- Build `SD-Trainer-Plugin.op` from a zip, then rename `.zip` -> `.op`.
+- Include only runtime files:
   - `info.toml`
   - `SkidRuntime.as`
   - `SkidPhysics.as`
   - `SkidIO.as`
   - `SkidSettings.as`
   - `DDS_IMG/`
-  - `SkidOptions/`
-- Do not include docs, `.git`, release notes, or other repo metadata in the package.
-- From repo root, rebuild package with:
+- Do **not** bundle `SkidOptions/` in the `.op` (it is distributed via GitHub).
+- Exclude docs/repo metadata (`docs/`, `.git/`, release notes, etc.).
 
 ```bash
-rm -f "SD-Trainer-Plugin.op" "SD-Trainer-Plugin.zip" && zip -r "SD-Trainer-Plugin.zip" "info.toml" "SkidRuntime.as" "SkidPhysics.as" "SkidIO.as" "SkidSettings.as" "DDS_IMG" "SkidOptions" && mv "SD-Trainer-Plugin.zip" "SD-Trainer-Plugin.op"
+rm -f "SD-Trainer-Plugin.op" "SD-Trainer-Plugin.zip" && zip -r "SD-Trainer-Plugin.zip" "info.toml" "SkidRuntime.as" "SkidPhysics.as" "SkidIO.as" "SkidSettings.as" "DDS_IMG" && mv "SD-Trainer-Plugin.zip" "SD-Trainer-Plugin.op"
 ```
 
 - Verify package contents before release:
@@ -25,3 +24,8 @@ rm -f "SD-Trainer-Plugin.op" "SD-Trainer-Plugin.zip" && zip -r "SD-Trainer-Plugi
 ```bash
 unzip -l "SD-Trainer-Plugin.op"
 ```
+
+# Runtime Behavior
+
+- Keep logging clear when optional external assets are missing (especially `SkidOptions/`).
+- Operations should continue with safe defaults/fallbacks instead of hard-failing.
