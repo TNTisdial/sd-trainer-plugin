@@ -45,10 +45,15 @@ string SKIDS_SOURCE_DIR_ASPHALT;
 string SKIDS_SOURCE_DIR_DIRT;
 string SKIDS_SOURCE_DIR_GRASS;
 
-DriftTier currentTier = DriftTier::Default;
-uint64 lastSkidSwapTime = 0;
-DriftTier pendingTier = DriftTier::Default;
-int pendingTierFrames = 0;
+array<DriftTier> currentTierBySurface = {DriftTier::Default, DriftTier::Default, DriftTier::Default};
+array<uint64> lastSkidSwapTimeBySurface = {0, 0, 0};
+array<DriftTier> pendingTierBySurface = {DriftTier::Default, DriftTier::Default, DriftTier::Default};
+array<int> pendingTierFramesBySurface = {0, 0, 0};
+
+SkidSurface rawSurfaceKind = SkidSurface::Asphalt;
+SkidSurface stableSurfaceKind = SkidSurface::Asphalt;
+int rawSurfaceFrames = 0;
+uint64 lastSurfaceTransitionTimeMs = 0;
 bool wasGroundedLastFrame = false;
 uint64 landingLockoutUntilMs = 0;
 uint64 lastLandingTimeMs = 0;
@@ -90,12 +95,108 @@ string TierName(DriftTier tier) {
     return "default";
 }
 
+DriftTier CurrentTierForSurface(SkidSurface surfaceKind) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(currentTierBySurface.Length)) {
+        return DriftTier::Default;
+    }
+    return currentTierBySurface[index];
+}
+
+void SetCurrentTierForSurface(SkidSurface surfaceKind, DriftTier tier) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(currentTierBySurface.Length)) {
+        return;
+    }
+    currentTierBySurface[index] = tier;
+}
+
+uint64 LastSwapTimeForSurface(SkidSurface surfaceKind) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(lastSkidSwapTimeBySurface.Length)) {
+        return 0;
+    }
+    return lastSkidSwapTimeBySurface[index];
+}
+
+void SetLastSwapTimeForSurface(SkidSurface surfaceKind, uint64 swapTimeMs) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(lastSkidSwapTimeBySurface.Length)) {
+        return;
+    }
+    lastSkidSwapTimeBySurface[index] = swapTimeMs;
+}
+
+DriftTier PendingTierForSurface(SkidSurface surfaceKind) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(pendingTierBySurface.Length)) {
+        return DriftTier::Default;
+    }
+    return pendingTierBySurface[index];
+}
+
+void SetPendingTierForSurface(SkidSurface surfaceKind, DriftTier tier) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(pendingTierBySurface.Length)) {
+        return;
+    }
+    pendingTierBySurface[index] = tier;
+}
+
+int PendingTierFramesForSurface(SkidSurface surfaceKind) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(pendingTierFramesBySurface.Length)) {
+        return 0;
+    }
+    return pendingTierFramesBySurface[index];
+}
+
+void SetPendingTierFramesForSurface(SkidSurface surfaceKind, int frames) {
+    int index = SurfaceIndex(surfaceKind);
+    if (index < 0 || index >= int(pendingTierFramesBySurface.Length)) {
+        return;
+    }
+    pendingTierFramesBySurface[index] = frames;
+}
+
+void ResetPendingGateForSurface(SkidSurface surfaceKind) {
+    SetPendingTierForSurface(surfaceKind, CurrentTierForSurface(surfaceKind));
+    SetPendingTierFramesForSurface(surfaceKind, 0);
+}
+
+void UpdateStableSurface(SkidSurface detectedSurface) {
+    if (detectedSurface == rawSurfaceKind) {
+        rawSurfaceFrames += 1;
+    } else {
+        dbg("[Surface] Raw candidate changed: " + SurfaceId(rawSurfaceKind) + " -> " + SurfaceId(detectedSurface));
+        rawSurfaceKind = detectedSurface;
+        rawSurfaceFrames = 1;
+    }
+
+    int requiredFrames = Math::Max(1, surfaceStabilityFrames);
+    if (detectedSurface == stableSurfaceKind || rawSurfaceFrames < requiredFrames) {
+        return;
+    }
+
+    SkidSurface previousSurface = stableSurfaceKind;
+    stableSurfaceKind = detectedSurface;
+    lastSurfaceTransitionTimeMs = Time::Now;
+    ResetPendingGateForSurface(stableSurfaceKind);
+    dbg("[Surface] Stable transition: " + SurfaceId(previousSurface) + " -> " + SurfaceId(stableSurfaceKind)
+        + " (frames=" + rawSurfaceFrames + ", required=" + requiredFrames + ")");
+}
+
 void ResetRuntimeSwapState() {
-    currentTier = DriftTier::Default;
-    pendingTier = DriftTier::Default;
-    pendingTierFrames = 0;
-    lastSkidSwapTime = 0;
+    rawSurfaceKind = SkidSurface::Asphalt;
+    stableSurfaceKind = SkidSurface::Asphalt;
+    rawSurfaceFrames = 0;
+    lastSurfaceTransitionTimeMs = 0;
+
     for (uint i = 0; i < kSurfaces.Length; i++) {
+        SetCurrentTierForSurface(kSurfaces[i], DriftTier::Default);
+        SetPendingTierForSurface(kSurfaces[i], DriftTier::Default);
+        SetPendingTierFramesForSurface(kSurfaces[i], 0);
+        SetLastSwapTimeForSurface(kSurfaces[i], 0);
         SetTrackedLiveFilename(kSurfaces[i], "Default.dds");
     }
 }
@@ -172,19 +273,25 @@ void Render() {
     SimulationStep();
 
     float speedKmh = prevSpeed * 3.6f;
-    float adjustedMaxAccelSpeedSlide = ComputeAdjustedMaxAccelSpeedSlide(speedKmh);
+    SkidSurface activeSurface = stableSurfaceKind;
+    float adjustedMaxAccelSpeedSlide = ComputeAdjustedMaxAccelSpeedSlide(speedKmh, activeSurface);
 
     if (lowSpeedForgivenessEnabled) {
-        adjustedMaxAccelSpeedSlide = ApplyLowSpeedForgiveness(adjustedMaxAccelSpeedSlide, speedKmh, SurfaceFromMaterial(currentSurfaceMaterial));
+        adjustedMaxAccelSpeedSlide = ApplyLowSpeedForgiveness(adjustedMaxAccelSpeedSlide, speedKmh, activeSurface);
     }
 
     float driftQualityRatio = ComputeDriftQualityRatio(adjustedMaxAccelSpeedSlide);
 
-    DriftTier targetTier = DetermineTargetTier(driftQualityRatio);
-    targetTier = ApplyLandingLockoutGate(targetTier);
-    targetTier = ApplyTierPersistenceGate(targetTier);
-    bool tierChanged = targetTier != currentTier;
-    if (!tierChanged || Time::Now - lastSkidSwapTime <= swapDebounceMs) {
+    DriftTier currentSurfaceTier = CurrentTierForSurface(activeSurface);
+    DriftTier targetTier = DetermineTargetTier(driftQualityRatio, currentSurfaceTier);
+    targetTier = ApplyLandingLockoutGate(targetTier, activeSurface, currentSurfaceTier);
+    targetTier = ApplyTierPersistenceGate(targetTier, activeSurface, currentSurfaceTier);
+
+    bool tierChanged = targetTier != currentSurfaceTier;
+    bool inSurfaceTransitionGrace = surfaceTransitionGraceMs > 0
+        && Time::Now >= lastSurfaceTransitionTimeMs
+        && Time::Now - lastSurfaceTransitionTimeMs <= uint64(surfaceTransitionGraceMs);
+    if (!tierChanged || (!inSurfaceTransitionGrace && Time::Now - LastSwapTimeForSurface(activeSurface) <= swapDebounceMs)) {
         return;
     }
 
@@ -193,19 +300,21 @@ void Render() {
         return;
     }
 
-    dbg("[Render] Tier changed: " + TierName(currentTier) + " -> " + TierName(targetTier));
+    dbg("[Render] Surface=" + SurfaceId(activeSurface)
+        + " tier changed: " + TierName(currentSurfaceTier) + " -> " + TierName(targetTier)
+        + ", ratio=" + driftQualityRatio + ", grace=" + inSurfaceTransitionGrace);
 
-    bool anyChanged = false;
-    bool allOk = SwapSkidTextureAllSurfaces(targetTier, anyChanged);
-    if (anyChanged) {
+    bool anyChanged = TierToFilenameForSurface(currentSurfaceTier, activeSurface) != TierToFilenameForSurface(targetTier, activeSurface);
+    bool allOk = anyChanged ? SwapSkidTextureForSurface(targetTier, activeSurface) : true;
+    if (anyChanged && allOk) {
         RefreshGameTextures();
     }
 
     if (allOk) {
-        currentTier = targetTier;
-        lastSkidSwapTime = Time::Now;
-        dbg("[Render] Swap complete for all surfaces: tier=" + TierName(targetTier));
+        SetCurrentTierForSurface(activeSurface, targetTier);
+        SetLastSwapTimeForSurface(activeSurface, Time::Now);
+        dbg("[Render] Swap complete: surface=" + SurfaceId(activeSurface) + ", tier=" + TierName(targetTier));
     } else {
-        warn("[Render] Partial skid swap failure. Keeping previous tier state for retry.");
+        warn("[Render] Surface swap failure: surface=" + SurfaceId(activeSurface) + ". Keeping previous tier state for retry.");
     }
 }

@@ -38,6 +38,12 @@ int promotionPersistenceFrames = 4;
 [Setting hidden name="Downgrade Persistence Frames" description="Frames required before downgrading skid tier. 0 disables persistence."]
 int downgradePersistenceFrames = 4;
 
+[Setting hidden name="Surface Stability Frames" description="Consecutive frames required before a detected surface becomes active. Higher values resist one-frame surface spikes."]
+int surfaceStabilityFrames = 2;
+
+[Setting hidden name="Surface Transition Grace (ms)" description="Briefly bypass swap debounce after active surface changes. 0 disables transition grace."]
+int surfaceTransitionGraceMs = 100;
+
 [Setting hidden name="Landing Lockout (ms)" description="Block tier upgrades briefly after landing. 0 disables lockout."]
 int landingLockoutMs = 30;
 
@@ -121,6 +127,8 @@ float _prev_skidHysteresisUp = 0.015f;
 float _prev_skidHysteresisDown = 0.015f;
 int _prev_promotionPersistenceFrames = 0;
 int _prev_downgradePersistenceFrames = 0;
+int _prev_surfaceStabilityFrames = 2;
+int _prev_surfaceTransitionGraceMs = 100;
 int _prev_landingLockoutMs = 0;
 float _prev_minSlipCoefToDrift = 0.00f;
 float _prev_slipHysteresis = 0.00f;
@@ -210,6 +218,8 @@ void ResetRuntimeTuningDefaults() {
 
     promotionPersistenceFrames = 4;
     downgradePersistenceFrames = 4;
+    surfaceStabilityFrames = 2;
+    surfaceTransitionGraceMs = 100;
     landingLockoutMs = 30;
     minSlipCoefToDrift = 0.150f;
     slipHysteresis = 0.020f;
@@ -286,6 +296,10 @@ void R_S_RuntimeSettingsTab() {
     DrawHelpIcon("Frames required before a tier upgrade is accepted.");
     downgradePersistenceFrames = UI::SliderInt("Downgrade Persistence Frames", downgradePersistenceFrames, 0, 12);
     DrawHelpIcon("Frames required before a tier downgrade is accepted.");
+    surfaceStabilityFrames = UI::SliderInt("Surface Stability Frames", surfaceStabilityFrames, 1, 8);
+    DrawHelpIcon("Consecutive frames required before a detected surface becomes the active grading surface.");
+    surfaceTransitionGraceMs = UI::SliderInt("Surface Transition Grace (ms)", surfaceTransitionGraceMs, 0, 400);
+    DrawHelpIcon("After active surface changes, this window bypasses swap debounce to let the new surface react immediately.");
     landingLockoutMs = UI::SliderInt("Landing Lockout (ms)", landingLockoutMs, 0, 400);
     DrawHelpIcon("Temporarily blocks tier upgrades right after landing.");
     minSlipCoefToDrift = UI::SliderFloat("Min SlipCoef To Drift", minSlipCoefToDrift, 0.00f, 0.30f);
@@ -381,6 +395,8 @@ void OnSettingsChanged() {
     if (TrackSettingChangeFloat("Downgrade Hysteresis", skidHysteresisDown, _prev_skidHysteresisDown)) _prev_skidHysteresisDown = skidHysteresisDown;
     if (TrackSettingChangeInt("Promotion Persistence Frames", promotionPersistenceFrames, _prev_promotionPersistenceFrames)) _prev_promotionPersistenceFrames = promotionPersistenceFrames;
     if (TrackSettingChangeInt("Downgrade Persistence Frames", downgradePersistenceFrames, _prev_downgradePersistenceFrames)) _prev_downgradePersistenceFrames = downgradePersistenceFrames;
+    if (TrackSettingChangeInt("Surface Stability Frames", surfaceStabilityFrames, _prev_surfaceStabilityFrames)) _prev_surfaceStabilityFrames = surfaceStabilityFrames;
+    if (TrackSettingChangeInt("Surface Transition Grace (ms)", surfaceTransitionGraceMs, _prev_surfaceTransitionGraceMs)) _prev_surfaceTransitionGraceMs = surfaceTransitionGraceMs;
     if (TrackSettingChangeInt("Landing Lockout (ms)", landingLockoutMs, _prev_landingLockoutMs)) _prev_landingLockoutMs = landingLockoutMs;
     if (TrackSettingChangeFloat("Min SlipCoef To Drift", minSlipCoefToDrift, _prev_minSlipCoefToDrift)) _prev_minSlipCoefToDrift = minSlipCoefToDrift;
     if (TrackSettingChangeFloat("Slip Hysteresis", slipHysteresis, _prev_slipHysteresis)) _prev_slipHysteresis = slipHysteresis;

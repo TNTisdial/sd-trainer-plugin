@@ -298,7 +298,8 @@ bool SwapSkidTextureAllSurfaces(DriftTier targetTier, bool &out anyChanged) {
 
     for (uint i = 0; i < kSurfaces.Length; i++) {
         SkidSurface surfaceKind = kSurfaces[i];
-        if (TierToFilenameForSurface(currentTier, surfaceKind) == TierToFilenameForSurface(targetTier, surfaceKind)) {
+        string targetFile = TierToFilenameForSurface(targetTier, surfaceKind);
+        if (TrackedLiveFilename(surfaceKind) == targetFile) {
             continue;
         }
 

@@ -69,15 +69,15 @@ SkidSurface SurfaceFromMaterial(CSceneVehicleVisState::EPlugSurfaceMaterialId ma
     return SkidSurface::Asphalt;
 }
 
-float ComputeAdjustedMaxAccelSpeedSlide(float speedKmh) {
+float ComputeAdjustedMaxAccelSpeedSlide(float speedKmh, SkidSurface surfaceKind) {
     float adjustedMax = ASPHALT_BASE_MAX_ACCEL;
     if (speedKmh > ASPHALT_HIGH_SPEED_THRESHOLD_KMH) {
         adjustedMax = ASPHALT_HIGH_SPEED_BASE + speedKmh * ASPHALT_HIGH_SPEED_SLOPE + PERFECT_BUFFER;
     }
 
-    if (currentSurfaceMaterial == CSceneVehicleVisState::EPlugSurfaceMaterialId::Dirt) {
+    if (surfaceKind == SkidSurface::Dirt) {
         adjustedMax = DIRT_MAX_ACCEL + PERFECT_BUFFER;
-    } else if (currentSurfaceMaterial == CSceneVehicleVisState::EPlugSurfaceMaterialId::Green) {
+    } else if (surfaceKind == SkidSurface::Grass) {
         adjustedMax = GRASS_MAX_ACCEL + PERFECT_BUFFER;
     }
 
@@ -163,7 +163,7 @@ int TierRank(DriftTier tier) {
     return 0;
 }
 
-DriftTier ApplyLandingLockoutGate(DriftTier candidateTier) {
+DriftTier ApplyLandingLockoutGate(DriftTier candidateTier, SkidSurface surfaceKind, DriftTier currentTierForSurface) {
     if (landingLockoutMs <= 0) {
         return candidateTier;
     }
@@ -173,23 +173,27 @@ DriftTier ApplyLandingLockoutGate(DriftTier candidateTier) {
     }
 // More code to make appearance nicer. 
 // This plugin aint for pros 
-    if (TierRank(candidateTier) > TierRank(currentTier)) {
-        dbg("[Gate] Landing lockout blocked upgrade: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+    if (TierRank(candidateTier) > TierRank(currentTierForSurface)) {
+        dbg("[Gate] Landing lockout blocked upgrade: surface=" + SurfaceId(surfaceKind)
+            + " " + TierName(currentTierForSurface) + " -> " + TierName(candidateTier)
             + " (remaining=" + int(landingLockoutUntilMs - Time::Now) + "ms)");
-        return currentTier;
+        return currentTierForSurface;
     }
 
     return candidateTier;
 }
 // This is to prevent the tier from changing too rapidly, when effects are applied, downhill or landing
-DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
-    if (candidateTier == currentTier) {
-        pendingTier = currentTier;
-        pendingTierFrames = 0;
-        return currentTier;
+DriftTier ApplyTierPersistenceGate(DriftTier candidateTier, SkidSurface surfaceKind, DriftTier currentTierForSurface) {
+    DriftTier pendingTier = PendingTierForSurface(surfaceKind);
+    int pendingTierFrames = PendingTierFramesForSurface(surfaceKind);
+
+    if (candidateTier == currentTierForSurface) {
+        SetPendingTierForSurface(surfaceKind, currentTierForSurface);
+        SetPendingTierFramesForSurface(surfaceKind, 0);
+        return currentTierForSurface;
     }
 
-    int currentRank = TierRank(currentTier);
+    int currentRank = TierRank(currentTierForSurface);
     int candidateRank = TierRank(candidateTier);
     bool isUpgrade = candidateRank > currentRank;
 
@@ -213,22 +217,25 @@ DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
     }
 
     if (requiredFrames <= 0) {
-        pendingTier = candidateTier;
-        pendingTierFrames = 0;
+        SetPendingTierForSurface(surfaceKind, candidateTier);
+        SetPendingTierFramesForSurface(surfaceKind, 0);
         return candidateTier;
     }
 
     if (pendingTier != candidateTier) {
-        pendingTier = candidateTier;
-        pendingTierFrames = 1;
-        dbg("[Gate] Persistence started: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+        SetPendingTierForSurface(surfaceKind, candidateTier);
+        SetPendingTierFramesForSurface(surfaceKind, 1);
+        dbg("[Gate] Persistence started: surface=" + SurfaceId(surfaceKind)
+            + " " + TierName(currentTierForSurface) + " -> " + TierName(candidateTier)
             + " (1/" + requiredFrames + " frames)");
-        return currentTier;
+        return currentTierForSurface;
     }
 
     if (pendingTierFrames < requiredFrames) {
         pendingTierFrames += 1;
-        dbg("[Gate] Persistence holding: " + TierName(currentTier) + " -> " + TierName(candidateTier)
+        SetPendingTierFramesForSurface(surfaceKind, pendingTierFrames);
+        dbg("[Gate] Persistence holding: surface=" + SurfaceId(surfaceKind)
+            + " " + TierName(currentTierForSurface) + " -> " + TierName(candidateTier)
             + " (" + pendingTierFrames + "/" + requiredFrames + " frames)");
     }
 
@@ -236,21 +243,21 @@ DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
         return candidateTier;
     }
 
-    return currentTier;
+    return currentTierForSurface;
 }
 
 // --- Tier Selection ---
 // Hysteresis is used to prevent the tier from changing too rapidly
-DriftTier DetermineTargetTier(float driftQualityRatio) {
+DriftTier DetermineTargetTier(float driftQualityRatio, DriftTier currentTierForSurface) {
     if (isBoosted && !allowLiveBoostGrading) {
-        return currentTier;
+        return currentTierForSurface;
     }
 
     if (!isDrifting) {
         return DriftTier::Default;
     }
 
-    if (currentTier == DriftTier::High) {
+    if (currentTierForSurface == DriftTier::High) {
         if (driftQualityRatio < greenSkidThreshold - skidHysteresisDown) {
             if (driftQualityRatio >= yellowSkidThreshold - skidHysteresisDown) return DriftTier::Mid;
             if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
@@ -259,7 +266,7 @@ DriftTier DetermineTargetTier(float driftQualityRatio) {
         return DriftTier::High;
     }
 
-    if (currentTier == DriftTier::Mid) {
+    if (currentTierForSurface == DriftTier::Mid) {
         if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
         if (driftQualityRatio < yellowSkidThreshold - skidHysteresisDown) {
             if (driftQualityRatio >= redSkidThreshold) return DriftTier::Poor;
@@ -268,7 +275,7 @@ DriftTier DetermineTargetTier(float driftQualityRatio) {
         return DriftTier::Mid;
     }
 
-    if (currentTier == DriftTier::Poor) {
+    if (currentTierForSurface == DriftTier::Poor) {
         if (driftQualityRatio >= greenSkidThreshold + skidHysteresisUp) return DriftTier::High;
         if (driftQualityRatio >= yellowSkidThreshold + skidHysteresisUp) return DriftTier::Mid;
         if (driftQualityRatio < redSkidThreshold - skidHysteresisDown) return DriftTier::Default;
@@ -303,6 +310,9 @@ void SimulationStep() {
 
     currentSurfaceMaterial = CSceneVehicleVisState::EPlugSurfaceMaterialId(vis.FLGroundContactMaterial);
     bool isGrounded = currentSurfaceMaterial != CSceneVehicleVisState::EPlugSurfaceMaterialId::XXX_Null;
+    if (isGrounded) {
+        UpdateStableSurface(SurfaceFromMaterial(currentSurfaceMaterial));
+    }
     if (!wasGroundedLastFrame && isGrounded && landingLockoutMs > 0) {
         landingLockoutUntilMs = Time::Now + uint64(landingLockoutMs);
     }
