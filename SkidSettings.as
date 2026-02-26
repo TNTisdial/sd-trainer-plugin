@@ -1,13 +1,13 @@
 // Owns: persisted settings declarations and settings/picker UI.
 
 // --- Core Plugin Settings ---
-[Setting name="Enable Plugin" description="Enables/ Disables the plugin."]
+[Setting hidden name="Enable Plugin" description="Enables/ Disables the plugin."]
 bool pluginEnabled = true;
 
 [Setting hidden name="Gravity Acceleration Adjustment" description="Calculate acceleration independently of gravity"]
 bool useSlopeAdjustedAcc = true;
 
-[Setting name="Debug Logging" description="Print verbose debug info to the Openplanet console."]
+[Setting hidden name="Debug Logging" description="Print verbose debug info to the Openplanet console."]
 bool debugLogging = false;
 
 [Setting hidden name="Show Advanced Settings" description="Show advanced tuning controls in the Runtime settings tab."]
@@ -147,6 +147,47 @@ float _prev_forgivenessMinSpeed_Grass = 150.0f;
 float _prev_forgivenessFactor_Grass = 0.90f;
 
 // --- Runtime Settings UI ---
+string generalActionsStatus = "";
+
+[SettingsTab name="General" icon="Cogs"]
+void R_S_GeneralSettingsTab() {
+    pluginEnabled = UI::Checkbox("Enable Plugin", pluginEnabled);
+    debugLogging = UI::Checkbox("Debug Logging", debugLogging);
+
+    UI::Separator();
+    UI::Text("Modless handoff");
+    UI::TextWrapped("When done using this plugin, disable it, delete ModWork, then load the next map so Modless-Skids can repopulate its files.");
+    if (pluginEnabled) {
+        UI::TextWrapped("\\$f93Tip: turn off 'Enable Plugin' before deleting ModWork for a clean handoff.\\$z");
+    }
+
+    if (UI::Button(Icons::TrashO + " Delete ModWork Folder (Modless handoff)")) {
+        bool deletedOk = DeleteModWorkFolderForModlessHandoff();
+        if (deletedOk) {
+            generalActionsStatus = "ModWork deleted. Load next map to let Modless-Skids repopulate.";
+        } else {
+            generalActionsStatus = "Could not fully delete ModWork. Check Openplanet logs and try again.";
+        }
+    }
+
+    UI::Separator();
+    UI::Text("Runtime rebuild");
+    UI::TextWrapped("Re-runs skid checks, install/fallback download, texture list refresh, staging, and default priming like plugin startup.");
+    if (UI::Button("Repopulate Skids (Startup Rebuild)")) {
+        bool rebuiltOk = BootstrapSkidRuntimeAssets();
+        if (rebuiltOk) {
+            generalActionsStatus = "Startup rebuild finished. Skids reloaded and primed.";
+        } else {
+            generalActionsStatus = "Startup rebuild completed with warnings. Check logs for missing files or staging issues.";
+        }
+    }
+
+    if (generalActionsStatus.Length > 0) {
+        UI::Separator();
+        UI::TextWrapped(generalActionsStatus);
+    }
+}
+
 void DrawHelpIcon(const string &in infoText) {
     UI::SameLine();
     UI::Text(Icons::QuestionCircle);

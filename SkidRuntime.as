@@ -90,8 +90,17 @@ string TierName(DriftTier tier) {
     return "default";
 }
 
-// --- Entrypoints ---
-void Main() {
+void ResetRuntimeSwapState() {
+    currentTier = DriftTier::Default;
+    pendingTier = DriftTier::Default;
+    pendingTierFrames = 0;
+    lastSkidSwapTime = 0;
+    for (uint i = 0; i < kSurfaces.Length; i++) {
+        SetTrackedLiveFilename(kSurfaces[i], "Default.dds");
+    }
+}
+
+bool BootstrapSkidRuntimeAssets() {
     InitSkidSettings();
 
     MODWORK_FOLDER = IO::FromUserGameFolder("Skins/Stadium/ModWork").Replace("\\", "/");
@@ -111,30 +120,38 @@ void Main() {
     EnsureConfiguredSkidFilesExist();
     RefreshTextureList();
 
+    ResetRuntimeSwapState();
+
     int totalTextures = TotalLoadedSkidTextures();
     if (totalTextures == 0) {
         warn("[Init] No .dds textures found in any surface folder. Colored skids disabled.");
         stagedFilesReady = false;
-    } else {
-        dbg("[Init] Textures loaded - Asphalt: " + skidTexturesAsphalt.Length
-            + ", Dirt: " + skidTexturesDirt.Length
-            + ", Grass: " + skidTexturesGrass.Length);
-
-        bool allStaged = StageRequiredTexturesForAllSurfaces();
-
-        if (allStaged) {
-            allStaged = PrimeLiveDefaultsForAllSurfaces();
-        }
-
-        stagedFilesReady = allStaged;
-        if (stagedFilesReady) {
-            currentTier = DriftTier::Default;
-            RefreshGameTextures();
-            dbg("[Init] Startup staging and priming completed.");
-        } else {
-            warn("[Init] One or more textures failed to stage/prime; colored skids disabled.");
-        }
+        return false;
     }
+
+    dbg("[Init] Textures loaded - Asphalt: " + skidTexturesAsphalt.Length
+        + ", Dirt: " + skidTexturesDirt.Length
+        + ", Grass: " + skidTexturesGrass.Length);
+
+    bool allStaged = StageRequiredTexturesForAllSurfaces();
+    if (allStaged) {
+        allStaged = PrimeLiveDefaultsForAllSurfaces();
+    }
+
+    stagedFilesReady = allStaged;
+    if (stagedFilesReady) {
+        RefreshGameTextures();
+        dbg("[Init] Startup staging and priming completed.");
+    } else {
+        warn("[Init] One or more textures failed to stage/prime; colored skids disabled.");
+    }
+
+    return stagedFilesReady;
+}
+
+// --- Entrypoints ---
+void Main() {
+    BootstrapSkidRuntimeAssets();
 
     while (Display::GetWidth() == -1) {
         yield();
