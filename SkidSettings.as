@@ -327,6 +327,7 @@ bool TrackSettingChangeInt(const string &in label, int current, int previous) {
     return true;
 }
 
+// Makes it easier to see what the hell is happening when debugging
 void OnSettingsChanged() {
     if (!debugLogging) return;
     if (TrackSettingChangeBool("Enable Plugin", pluginEnabled, _prev_pluginEnabled)) _prev_pluginEnabled = pluginEnabled;

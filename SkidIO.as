@@ -1,4 +1,6 @@
 // --- Core IO Helpers ---
+
+
 bool CopyFileAbs(const string &in fromAbs, const string &in toAbs) {
     if (!IO::FileExists(fromAbs)) {
         warn("[IO ERROR] Source not found: " + fromAbs);
@@ -38,6 +40,7 @@ void RefreshGameTextures() {
 }
 
 // --- Path and Surface Mapping ---
+// TODO: Get Vistas working too
 string SourceDirForSurface(SkidSurface surfaceKind) {
     if (surfaceKind == SkidSurface::Dirt) return SKIDS_SOURCE_DIR_DIRT;
     if (surfaceKind == SkidSurface::Grass) return SKIDS_SOURCE_DIR_GRASS;
@@ -140,6 +143,7 @@ int TotalLoadedSkidTextures() {
 }
 
 // --- Staging and Priming ---
+// PITA 
 bool EnsureStagedTexture(SkidSurface surfaceKind, const string &in filename) {
     string stagedPath = StagedPath(surfaceKind, filename);
     if (IO::FileExists(stagedPath)) return true;
@@ -216,7 +220,11 @@ bool PrimeLiveDefaultsForAllSurfaces() {
     return allPrimed;
 }
 
-// --- Live Swapping ---
+// --- Live Swapping --- 
+// We use IO::Move instead of IO::Copy so we are not writing to disk every swap. 
+// This is a bit of a hack, however it is the only way I could find to get the game to 
+// recognize the new texture without restarting the map. 
+
 bool SwapSkidTextureForSurface(DriftTier toTier, SkidSurface surfaceKind) {
     string fromFile = TrackedLiveFilename(surfaceKind);
     if (fromFile.Length == 0) {
@@ -304,6 +312,8 @@ bool SwapSkidTextureAllSurfaces(DriftTier targetTier, bool &out anyChanged) {
 }
 
 // --- Bundled Install ---
+// These .dds skids were created to make them easier to see in peripheral vision. 
+// Right now, we download from the github automatically, to save on packagee size. 
 bool HasBundledSkidsAtRoot(const string &in root) {
     if (!IO::FolderExists(root)) return false;
     return IO::FolderExists(root + "/Asphalt")
@@ -350,7 +360,7 @@ string ResolveBundledSkidsRoot() {
             }
         }
     }
-
+// Here we look in the plugins folder for any plugins that have skid options aka Modless-Skids
     string pluginsDir = IO::FromDataFolder("Plugins").Replace("\\", "/");
     if (IO::FolderExists(pluginsDir)) {
         auto entries = IO::IndexFolder(pluginsDir, false);
@@ -400,7 +410,7 @@ string ResolveBundledSkidsRoot() {
 
     return "";
 }
-
+// .op file wont come with a skidoptions folder, so we need to download it from the github.
 bool DownloadBundledSkidFile(const string &in surfaceName, const string &in filename) {
     string destDir = IO::FromUserGameFolder("Skins/Stadium/Skids/" + surfaceName).Replace("\\", "/");
     EnsureDir(destDir);
@@ -532,6 +542,7 @@ void InstallBundledSkids() {
 }
 
 // --- Cleanup Entrypoints ---
+
 void CleanupModWork() {
     if (MODWORK_FOLDER == "") {
         MODWORK_FOLDER = IO::FromUserGameFolder("Skins/Stadium/ModWork").Replace("\\", "/");

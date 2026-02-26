@@ -1,4 +1,5 @@
-// Owns: acceleration/drift math, gates, and tier decisions.
+// acceleration/drift math, gates, and tier decisions.
+// Credit to MagpieAI, this project would not exist without your work. 
 
 // --- Model Constants ---
 const int ACCEL_ARRAY_SIZE = 4;
@@ -82,7 +83,7 @@ float ComputeAdjustedMaxAccelSpeedSlide(float speedKmh) {
 
     return adjustedMax;
 }
-
+// At lower speeds, getting a perfect slide is harder, so to prevent flickering, we give the player a buffer.
 void GetForgivenessParams(SkidSurface surfaceKind, float &out maxSpeed, float &out minSpeed, float &out factor) {
     if (surfaceKind == SkidSurface::Dirt) {
         maxSpeed = forgivenessMaxSpeed_Dirt;
@@ -119,7 +120,7 @@ float ApplyLowSpeedForgiveness(float accelMax, float speedKmh, SkidSurface surfa
 
     return accelMax;
 }
-
+// This is the core of the drift quality calculation.
 float ComputeDriftQualityRatio(float adjustedMaxAccelSpeedSlide) {
     float denom = Math::Max(MIN_ACCEL_DENOM, adjustedMaxAccelSpeedSlide);
     float numerator = slopeAdjustedAcceleration;
@@ -170,7 +171,8 @@ DriftTier ApplyLandingLockoutGate(DriftTier candidateTier) {
     if (Time::Now >= landingLockoutUntilMs) {
         return candidateTier;
     }
-
+// More code to make appearance nicer. 
+// This plugin aint for pros 
     if (TierRank(candidateTier) > TierRank(currentTier)) {
         dbg("[Gate] Landing lockout blocked upgrade: " + TierName(currentTier) + " -> " + TierName(candidateTier)
             + " (remaining=" + int(landingLockoutUntilMs - Time::Now) + "ms)");
@@ -179,7 +181,7 @@ DriftTier ApplyLandingLockoutGate(DriftTier candidateTier) {
 
     return candidateTier;
 }
-
+// This is to prevent the tier from changing too rapidly, when effects are applied, downhill or landing
 DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
     if (candidateTier == currentTier) {
         pendingTier = currentTier;
@@ -238,6 +240,7 @@ DriftTier ApplyTierPersistenceGate(DriftTier candidateTier) {
 }
 
 // --- Tier Selection ---
+// Hysteresis is used to prevent the tier from changing too rapidly
 DriftTier DetermineTargetTier(float driftQualityRatio) {
     if (isBoosted && !allowLiveBoostGrading) {
         return currentTier;
