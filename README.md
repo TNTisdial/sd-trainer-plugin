@@ -8,13 +8,6 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 
 - Get the latest build from the Releases page: <https://github.com/TNTisdial/sd-trainer-plugin/releases/latest>
 
-## Status and compatibility
-
-- This plugin is still a work in progress and needs more tuning/cleanup before Openplanet submission for School use.
-- You must set Openplanet Signature Mode to `Developer` for this plugin to run.
-- This plugin and `XertroV/tm-modless-skids` both use `Skins/Stadium/ModWork`, so only one workflow should control it at a time.
-- For a clean handoff back to Modless-Skids: disable this plugin, open the Skid Skins tab, click `Delete ModWork Folder (Modless handoff)`, then load the next map.
-
 ## Install
 
 - Copy `SD-Trainer-Plugin.op` to `C:\Users\<username>\OpenplanetNext\Plugins`.
