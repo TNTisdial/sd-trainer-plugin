@@ -74,7 +74,7 @@ def patch_info_toml(info_path: Path, branch_tag: str) -> None:
 
     text, name_count = re.subn(
         r'(?m)^name\s*=\s*"[^"]*"\s*$',
-        f'name     = "SD-Trainer-Plugin ({branch_tag})"',
+        f'name     = "SD Trainer ({branch_tag})"',
         text,
         count=1,
     )
@@ -154,8 +154,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--stem",
-        default="SD-Trainer-Plugin",
-        help="Output base name without number or extension (default: SD-Trainer-Plugin)",
+        default="SD Trainer",
+        help="Output base name without number or extension (default: SD Trainer)",
     )
     parser.add_argument(
         "--no-branch-tag",
