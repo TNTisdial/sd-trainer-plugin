@@ -9,10 +9,3 @@ python3 build_op.py
 **Bundled files:** `info.toml`, `src/`, `DDS_IMG/`, `SkidOptions/`
 **Output:** Creates an auto-slotted archive (`SD-Trainer-Plugin.op`, `SD-Trainer-Plugin1.op`, `SD-Trainer-Plugin2.op`, …) and always refreshes the stable release file `SD-Trainer-Plugin.op` with the latest build.
 **Branch stamping:** Non-`main`/`master` branches stamp `name` + `version` suffix in `info.toml`. Skipped on `main`/`master`.
-
-**Flags:**
-
-| Flag | Effect |
-| `--no-branch-tag` | Skip branch stamp |
-| `--force-branch-tag` | Force branch stamp |
-| `--stem "SD-Trainer-Plugin-Test"` | Custom output name |
