@@ -10,28 +10,31 @@ All values below are current defaults from `src/settings/SkidSettings.as`.
 Advanced (hidden by default):
 
 - `Show Advanced Settings`: `false` (reveals runtime tuning controls)
-- `Gravity Acceleration Adjustment`: `true`
 
 Runtime UI action:
 
-- `Reset Runtime Tuning Defaults`: sets all Runtime tab tuning values back to code defaults.
+- `Reset Runtime Tuning Defaults`: resets Runtime tuning values shown below to code defaults. It does not reset `Gravity Acceleration Adjustment`.
 - `Settings profiles`: save/load/delete named snapshots of runtime tuning + skid skin tier picks.
 
 General UI action:
 
 - `Repopulate Skids (Startup Rebuild)`: runs startup rebuild/staging asynchronously.
+- `Delete ModWork Folder (Modless handoff)`: deletes current `Skins/Stadium/ModWork` contents so Modless-Skids can repopulate on next map load.
 
 Runtime profiles details:
 
 - Save with an existing profile name overwrites that profile.
 - `Duplicate` copies the selected profile to a new name from `Profile Name`.
 - `Rename Selected Profile` renames the selected profile to `Profile Name`.
+- Profile names must be non-empty (not just whitespace) and at most 48 characters.
 - Loading a profile applies settings, validates selected skid files, and runs startup rebuild/staging asynchronously.
 - Profile scope includes Runtime tab tuning fields and per-surface High/Mid/Poor skid file selections.
+- Profile loading is blocked while General startup rebuild is running, and startup rebuild is blocked while profile loading is running.
 
 Runtime UI help:
 
-- Advanced Runtime controls show a hoverable `?` icon tooltip next to each setting.
+- Most advanced Runtime controls show a hoverable `?` icon tooltip.
+- Controls currently without `?` tooltip include `Gravity Acceleration Adjustment`, `Allow Live Grading During Boost`, and `Low Speed Forgiveness`.
 
 ## Dynamic colored skids
 
@@ -39,15 +42,35 @@ Advanced (hidden by default):
 
 - `Swap Debounce (ms)`: `260`
 
+## Runtime acceleration model
+
+Advanced (hidden by default):
+
+- `Gravity Acceleration Adjustment`: `true`
+
 ## Tier thresholds
 
 Thresholds apply to `driftQualityRatio` (clamped to `[-1.0, 1.0]`). `1.0` represents a perfect SD.
 
-Advanced (hidden by default):
+These thresholds are always visible in the Runtime tab (not advanced-gated).
 
-- `Green Skid Threshold`: `0.910`
-- `Yellow Skid Threshold`: `0.70`
-- `Red Skid Threshold`: `0.10`
+Asphalt defaults:
+
+- `Asphalt Green Skid Threshold`: `0.910`
+- `Asphalt Yellow Skid Threshold`: `0.70`
+- `Asphalt Red Skid Threshold`: `0.10`
+
+Dirt defaults:
+
+- `Dirt Green Skid Threshold`: `0.910`
+- `Dirt Yellow Skid Threshold`: `0.70`
+- `Dirt Red Skid Threshold`: `0.10`
+
+Grass defaults:
+
+- `Grass Green Skid Threshold`: `0.910`
+- `Grass Yellow Skid Threshold`: `0.70`
+- `Grass Red Skid Threshold`: `0.10`
 
 ## Hysteresis
 
@@ -62,6 +85,8 @@ Advanced (hidden by default):
 
 - `Promotion Persistence Frames`: `4`
 - `Downgrade Persistence Frames`: `4`
+- `Surface Stability Frames`: `2`
+- `Surface Transition Grace (ms)`: `100`
 - `Landing Lockout (ms)`: `30`
 - `Min SlipCoef To Drift`: `0.150`
 - `Slip Hysteresis`: `0.020`

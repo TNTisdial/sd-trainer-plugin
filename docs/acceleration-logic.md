@@ -18,7 +18,8 @@ Where:
 
 Then clamps to `[-1.0, 1.0]`.
 
-This ratio (`driftQualityRatio`) drives tier selection: `default`, `poor`, `mid`, `high`.
+This ratio (`driftQualityRatio`) feeds target tier selection: `default`, `poor`, `mid`, `high`.
+Final swaps are then filtered by runtime gates (surface stability, lockout/persistence, debounce, and staging readiness).
 
 ## Measured acceleration path (`SimulationStep`)
 
@@ -53,17 +54,25 @@ Current implementation applies interpolation only for:
 
 Outside that range, it returns the unmodified expected max acceleration.
 
+Implementation note: this means speeds below `minSpeed` are also currently unmodified (forgiveness is not hard-clamped to full factor below min).
+
 ## Tier selection and swap gating
 
-1. If turbo is active and `Allow Live Grading During Boost` is disabled, the target tier is held at current tier.
-2. If not drifting, target is `default`.
-3. Otherwise, tier selection uses thresholds and hysteresis (`threshold + skidHysteresisUp` for upgrades and `threshold - skidHysteresisDown` for downgrades).
-4. Swap is attempted only when target tier differs, debounce elapsed (`swapDebounceMs`), and staged files are ready.
+1. Surface material is stabilized first: a detected surface must persist for `Surface Stability Frames` before becoming the active grading surface.
+2. If turbo is active and `Allow Live Grading During Boost` is disabled, the target tier is held at current tier.
+3. If not drifting, target is `default`.
+4. Otherwise, tier selection uses per-surface thresholds and hysteresis (`threshold + skidHysteresisUp` for upgrades and `threshold - skidHysteresisDown` for downgrades).
+5. Landing lockout can block upgrades for `Landing Lockout (ms)` after landing.
+6. Persistence gate requires consecutive frames before upgrades/downgrades are accepted (`Promotion Persistence Frames` / `Downgrade Persistence Frames`).
+7. For upgrades, persistence requirement can be extended by post-landing and post-boost spike guards (`Impact Extra Promotion Frames`, `Boost Extra Promotion Frames`).
+8. Swap is attempted only for the active surface when target tier differs and staged files are ready.
+9. Debounce is enforced per surface (`Swap Debounce (ms)`), except during `Surface Transition Grace (ms)` after stable surface changes.
 
-If any surface swap fails, current tier is kept for retry.
+If active-surface swap fails, that surface keeps its previous tier for retry.
 
 ## Boost baseline behavior
 
 - On boost start, baseline state is reset.
 - While boosted and not drifting, baseline acceleration is updated with an EMA controlled by `Boost Baseline Follow Rate`.
+- If boost live grading is active and baseline is not ready when ratio computation runs, baseline is initialized from the current slope-adjusted acceleration.
 - While drifting, baseline is held, so grading reflects acceleration above boost-only expectation.
