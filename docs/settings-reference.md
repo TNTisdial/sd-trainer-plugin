@@ -1,6 +1,6 @@
 # Settings Reference
 
-All values below are current defaults from `SkidSettings.as`.
+All values below are current defaults from `src/settings/SkidSettings.as`.
 
 ## General
 

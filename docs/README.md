@@ -16,7 +16,7 @@ This folder contains the current technical documentation for the skid runtime pl
 
 ## Code map
 
-- `SkidRuntime.as`: plugin lifecycle and frame orchestration, plus shared runtime state.
-- `SkidIO.as`: texture discovery, staging/priming, live swapping, bundled install, and cleanup.
-- `SkidPhysics.as`: simulation sampling, drift-quality model, forgiveness, and tier selection/gates.
-- `SkidSettings.as`: persisted settings declarations, runtime settings tab, and skid picker UI.
+- `src/runtime/SkidRuntime.as`: plugin lifecycle and frame orchestration, plus shared runtime state.
+- `src/io/SkidIO.as`: texture discovery, staging/priming, live swapping, bundled install, and cleanup.
+- `src/physics/SkidPhysics.as`: simulation sampling, drift-quality model, forgiveness, and tier selection/gates.
+- `src/settings/SkidSettings.as`: persisted settings declarations, runtime settings tab, and skid picker UI.

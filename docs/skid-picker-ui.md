@@ -1,6 +1,6 @@
 # Skid Picker UI
 
-`SkidSettings.as` provides both:
+`src/settings/SkidSettings.as` provides both:
 
 - menu window: `Skid Skin Picker`
 - settings tab: `Skid Skins`

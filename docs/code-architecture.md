@@ -4,10 +4,10 @@ This plugin is split into four runtime modules with explicit ownership.
 
 ## Module ownership
 
-- `SkidRuntime.as`: plugin lifecycle and frame orchestration (`Main`, `Render`), shared runtime state, and shared logging/ID helpers.
-- `SkidPhysics.as`: acceleration sampling, drift-quality math, tier selection, and transition gates.
-- `SkidIO.as`: file IO, texture discovery, staging/priming, live swaps, bundled install/fallback download, and cleanup hooks.
-- `SkidSettings.as`: all persisted settings declarations, runtime settings UI, settings change logging, and skid picker UI.
+- `src/runtime/SkidRuntime.as`: plugin lifecycle and frame orchestration (`Main`, `Render`), shared runtime state, and shared logging/ID helpers.
+- `src/physics/SkidPhysics.as`: acceleration sampling, drift-quality math, tier selection, and transition gates.
+- `src/io/SkidIO.as`: file IO, texture discovery, staging/priming, live swaps, bundled install/fallback download, and cleanup hooks.
+- `src/settings/SkidSettings.as`: all persisted settings declarations, runtime settings UI, settings change logging, and skid picker UI.
 
 ## Startup flow
 
@@ -28,6 +28,6 @@ This plugin is split into four runtime modules with explicit ownership.
 
 ## Settings-to-runtime data flow
 
-- Runtime and picker settings are persisted in `SkidSettings.as`.
+- Runtime and picker settings are persisted in `src/settings/SkidSettings.as`.
 - Physics and orchestration read those global settings directly each frame.
 - `OnSettingsChanged` emits change logs only when debug logging is enabled.

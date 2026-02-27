@@ -12,10 +12,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 RUNTIME_ITEMS = [
     "info.toml",
-    "SkidRuntime.as",
-    "SkidPhysics.as",
-    "SkidIO.as",
-    "SkidSettings.as",
+    "src",
     "DDS_IMG",
     "SkidOptions",
 ]

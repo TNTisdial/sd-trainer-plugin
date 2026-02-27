@@ -434,8 +434,14 @@ bool TryResolveFromSourcePath(const string &in sourcePath) {
     return false;
 }
 
+bool HasLegacyOrSrcRuntimeMarker(const string &in entryPath) {
+    if (IO::FileExists(entryPath + "/SkidRuntime.as")) return true;
+    if (IO::FileExists(entryPath + "/src/runtime/SkidRuntime.as")) return true;
+    return false;
+}
+
 bool TryResolveFromPreferredPluginEntry(const string &in entryPath) {
-    if (IO::FolderExists(entryPath) && IO::FileExists(entryPath + "/SkidRuntime.as")) {
+    if (IO::FolderExists(entryPath) && HasLegacyOrSrcRuntimeMarker(entryPath)) {
         if (TrySetBundledSkidsRoot(entryPath + "/SkidOptions", "plugins folder preferred scan")) {
             return true;
         }
