@@ -137,6 +137,17 @@ def verify_op(op_path: Path) -> None:
         )
 
 
+def sync_stable_output(repo_root: Path, built_op_path: Path, stem: str) -> Path:
+    stable_op_path = repo_root / f"{stem}.op"
+    if built_op_path == stable_op_path:
+        log(f"Stable output already current: {stable_op_path.name}")
+        return stable_op_path
+
+    shutil.copy2(built_op_path, stable_op_path)
+    log(f"Updated stable output: {stable_op_path.name} (from {built_op_path.name})")
+    return stable_op_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build Openplanet .op package with safe numbering"
@@ -200,6 +211,7 @@ def main() -> int:
     log(f"Renamed to: {op_path.name} ({size_kib:.1f} KiB)")
 
     verify_op(op_path)
+    sync_stable_output(repo_root, op_path, args.stem)
     log("Done")
     return 0
 

@@ -22,6 +22,12 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - In Openplanet click the developer tab, hover over `Load Plugin` 
 - Click SD-Trainer-Plugin
 
+## Build package
+
+- Run `python3 build_op.py` from repo root.
+- The script creates an auto-slotted build artifact and also updates `SD-Trainer-Plugin.op` to the newest build.
+- For releases and local install, use `SD-Trainer-Plugin.op`.
+
 ## What it does
 
 - Computes drift quality (`driftQualityRatio`) each frame from measured acceleration vs surface-specific expected max acceleration.
