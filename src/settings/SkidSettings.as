@@ -17,31 +17,31 @@ bool showAdvancedSettings = false;
 [Setting hidden name="Swap Debounce (ms)" description="Minimum time between color swaps in milliseconds. Lower = more responsive, higher = more stable." min=50 max=2000 drag]
 uint swapDebounceMs = 260;
 
-[Setting hidden name="Asphalt Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on asphalt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+[Setting hidden name="Asphalt High Skid Threshold" description="Minimum drift quality ratio for high skid tier on asphalt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
 float greenSkidThreshold_Asphalt = 0.910f;
 
-[Setting hidden name="Asphalt Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on asphalt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+[Setting hidden name="Asphalt Mid Skid Threshold" description="Minimum drift quality ratio for mid skid tier on asphalt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
 float yellowSkidThreshold_Asphalt = 0.70f;
 
-[Setting hidden name="Asphalt Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on asphalt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+[Setting hidden name="Asphalt Poor Skid Threshold" description="Minimum drift quality ratio for poor skid tier on asphalt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
 float redSkidThreshold_Asphalt = 0.10f;
 
-[Setting hidden name="Dirt Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on dirt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+[Setting hidden name="Dirt High Skid Threshold" description="Minimum drift quality ratio for high skid tier on dirt. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
 float greenSkidThreshold_Dirt = 0.910f;
 
-[Setting hidden name="Dirt Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on dirt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+[Setting hidden name="Dirt Mid Skid Threshold" description="Minimum drift quality ratio for mid skid tier on dirt. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
 float yellowSkidThreshold_Dirt = 0.70f;
 
-[Setting hidden name="Dirt Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on dirt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+[Setting hidden name="Dirt Poor Skid Threshold" description="Minimum drift quality ratio for poor skid tier on dirt. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
 float redSkidThreshold_Dirt = 0.10f;
 
-[Setting hidden name="Grass Green Skid Threshold" description="Minimum drift quality ratio for green (perfect) skid color on grass. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
+[Setting hidden name="Grass High Skid Threshold" description="Minimum drift quality ratio for high skid tier on grass. 1.00 is a perfect SD." min=0.50 max=1.00 drag]
 float greenSkidThreshold_Grass = 0.910f;
 
-[Setting hidden name="Grass Yellow Skid Threshold" description="Minimum drift quality ratio for yellow (good) skid color on grass. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
+[Setting hidden name="Grass Mid Skid Threshold" description="Minimum drift quality ratio for mid skid tier on grass. 1.00 is a perfect SD." min=0.30 max=0.99 drag]
 float yellowSkidThreshold_Grass = 0.70f;
 
-[Setting hidden name="Grass Red Skid Threshold" description="Minimum drift quality ratio for red (poor) skid color on grass. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
+[Setting hidden name="Grass Poor Skid Threshold" description="Minimum drift quality ratio for poor skid tier on grass. Below this stays default. 1.00 is a perfect SD." min=0.0 max=0.70 drag]
 float redSkidThreshold_Grass = 0.10f;
 
 [Setting hidden name="Upgrade Hysteresis" description="Buffer for upgrading color (e.g. red->yellow, yellow->green). Higher = harder to upgrade." min=0.0 max=0.15 drag]

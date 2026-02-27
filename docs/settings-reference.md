@@ -50,27 +50,27 @@ Advanced (hidden by default):
 
 ## Tier thresholds
 
-Thresholds apply to `driftQualityRatio` (clamped to `[-1.0, 1.0]`). `1.0` represents a perfect SD.
+Thresholds apply to the drift quality value (clamped to `[-1.0, 1.0]`). `1.0` represents a perfect SD.
 
 These thresholds are always visible in the Runtime tab (not advanced-gated).
 
 Asphalt defaults:
 
-- `Asphalt Green Skid Threshold`: `0.910`
-- `Asphalt Yellow Skid Threshold`: `0.70`
-- `Asphalt Red Skid Threshold`: `0.10`
+- `Asphalt High Skid Threshold`: `0.910`
+- `Asphalt Mid Skid Threshold`: `0.70`
+- `Asphalt Poor Skid Threshold`: `0.10`
 
 Dirt defaults:
 
-- `Dirt Green Skid Threshold`: `0.910`
-- `Dirt Yellow Skid Threshold`: `0.70`
-- `Dirt Red Skid Threshold`: `0.10`
+- `Dirt High Skid Threshold`: `0.910`
+- `Dirt Mid Skid Threshold`: `0.70`
+- `Dirt Poor Skid Threshold`: `0.10`
 
 Grass defaults:
 
-- `Grass Green Skid Threshold`: `0.910`
-- `Grass Yellow Skid Threshold`: `0.70`
-- `Grass Red Skid Threshold`: `0.10`
+- `Grass High Skid Threshold`: `0.910`
+- `Grass Mid Skid Threshold`: `0.70`
+- `Grass Poor Skid Threshold`: `0.10`
 
 ## Hysteresis
 

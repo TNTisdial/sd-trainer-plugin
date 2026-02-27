@@ -124,31 +124,31 @@ void R_S_RuntimeSettingsTab() {
     DrawSettingsProfilesPanel();
     UI::Separator();
 
-    UI::Text("Tier thresholds (driftQualityRatio)");
+    UI::Text("Tier thresholds");
     UI::TextWrapped("Reference: 1.00 is a perfect SD.");
     UI::Text("Asphalt");
-    greenSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Green Skid Threshold", greenSkidThreshold_Asphalt, 0.50f, 1.00f);
-    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on asphalt.");
-    yellowSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Yellow Skid Threshold", yellowSkidThreshold_Asphalt, 0.30f, 0.99f);
-    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on asphalt.");
-    redSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Red Skid Threshold", redSkidThreshold_Asphalt, 0.00f, 0.70f);
-    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on asphalt. Below this stays default.");
+    greenSkidThreshold_Asphalt = UI::SliderFloat("Asphalt High Skid Threshold", greenSkidThreshold_Asphalt, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for high skid tier on asphalt.");
+    yellowSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Mid Skid Threshold", yellowSkidThreshold_Asphalt, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for mid skid tier on asphalt.");
+    redSkidThreshold_Asphalt = UI::SliderFloat("Asphalt Poor Skid Threshold", redSkidThreshold_Asphalt, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for poor skid tier on asphalt. Below this stays default.");
 
     UI::Text("Dirt");
-    greenSkidThreshold_Dirt = UI::SliderFloat("Dirt Green Skid Threshold", greenSkidThreshold_Dirt, 0.50f, 1.00f);
-    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on dirt.");
-    yellowSkidThreshold_Dirt = UI::SliderFloat("Dirt Yellow Skid Threshold", yellowSkidThreshold_Dirt, 0.30f, 0.99f);
-    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on dirt.");
-    redSkidThreshold_Dirt = UI::SliderFloat("Dirt Red Skid Threshold", redSkidThreshold_Dirt, 0.00f, 0.70f);
-    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on dirt. Below this stays default.");
+    greenSkidThreshold_Dirt = UI::SliderFloat("Dirt High Skid Threshold", greenSkidThreshold_Dirt, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for high skid tier on dirt.");
+    yellowSkidThreshold_Dirt = UI::SliderFloat("Dirt Mid Skid Threshold", yellowSkidThreshold_Dirt, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for mid skid tier on dirt.");
+    redSkidThreshold_Dirt = UI::SliderFloat("Dirt Poor Skid Threshold", redSkidThreshold_Dirt, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for poor skid tier on dirt. Below this stays default.");
 
     UI::Text("Grass");
-    greenSkidThreshold_Grass = UI::SliderFloat("Grass Green Skid Threshold", greenSkidThreshold_Grass, 0.50f, 1.00f);
-    DrawHelpIcon("Minimum drift quality ratio for green (perfect) skid color on grass.");
-    yellowSkidThreshold_Grass = UI::SliderFloat("Grass Yellow Skid Threshold", yellowSkidThreshold_Grass, 0.30f, 0.99f);
-    DrawHelpIcon("Minimum drift quality ratio for yellow (good) skid color on grass.");
-    redSkidThreshold_Grass = UI::SliderFloat("Grass Red Skid Threshold", redSkidThreshold_Grass, 0.00f, 0.70f);
-    DrawHelpIcon("Minimum drift quality ratio for red (poor) skid color on grass. Below this stays default.");
+    greenSkidThreshold_Grass = UI::SliderFloat("Grass High Skid Threshold", greenSkidThreshold_Grass, 0.50f, 1.00f);
+    DrawHelpIcon("Minimum drift quality ratio for high skid tier on grass.");
+    yellowSkidThreshold_Grass = UI::SliderFloat("Grass Mid Skid Threshold", yellowSkidThreshold_Grass, 0.30f, 0.99f);
+    DrawHelpIcon("Minimum drift quality ratio for mid skid tier on grass.");
+    redSkidThreshold_Grass = UI::SliderFloat("Grass Poor Skid Threshold", redSkidThreshold_Grass, 0.00f, 0.70f);
+    DrawHelpIcon("Minimum drift quality ratio for poor skid tier on grass. Below this stays default.");
 
     if (UI::Button("Reset Runtime Tuning Defaults")) {
         ResetRuntimeTuningDefaults();

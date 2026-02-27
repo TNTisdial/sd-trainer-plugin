@@ -2,7 +2,7 @@
 name     = "SD Trainer"
 author   = "TNT"
 category = "Utilities"
-version  = "1.0.8"
+version  = "1.0.9"
 blocks   = [ "Plugin_SDTrainer" ]
 
 [script]
