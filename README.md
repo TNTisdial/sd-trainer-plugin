@@ -15,11 +15,6 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - In Openplanet click the developer tab, hover over `Load Plugin` 
 - Click SD-Trainer-Plugin
 
-## Build package
-
-- Run `python3 build_op.py` from repo root.
-- The script creates an auto-slotted build artifact and also updates `SD-Trainer-Plugin.op` to the newest build.
-- For releases and local install, use `SD-Trainer-Plugin.op`.
 
 ## What it does
 
@@ -35,6 +30,12 @@ Openplanet plugin for Trackmania that swaps skidmark textures in real time based
 - `docs/settings-reference.md` for runtime settings and defaults.
 - `docs/skid-picker-ui.md` for UI behavior and hidden persisted fields.
 - `docs/code-architecture.md` for module ownership and execution flow.
+
+## Build package
+
+- Run `python3 build_op.py` from repo root.
+- The script creates an auto-slotted build artifact and also updates `SD-Trainer-Plugin.op` to the newest build.
+- For releases and local install, use `SD-Trainer-Plugin.op`.
 
 ## Credit
 
